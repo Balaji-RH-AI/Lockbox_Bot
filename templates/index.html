@@ -1,0 +1,4840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lockbox Questionnaire | XBP Global</title>
+  <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      /* Modern enterprise — light (default) */
+      --bg: #FAFAFA;
+      --surface: #FFFFFF;
+      --surface-elev: #F8FAFC;
+      --text: #0F172A;
+      --text-muted: #64748B;
+      --border: #E5E7EB;
+      --border-strong: #CBD5E1;
+      --accent: #4F46E5;
+      --accent-hover: #4338CA;
+      --accent-soft: #EEF2FF;
+      --success: #16A34A;
+      --danger: #DC2626;
+      --warning: #D97706;
+      --shadow: 0 1px 2px rgba(15,23,42,0.05), 0 1px 3px rgba(15,23,42,0.06);
+      --shadow-md: 0 4px 6px -1px rgba(15,23,42,0.08), 0 2px 4px -2px rgba(15,23,42,0.05);
+      --shadow-lg: 0 10px 25px -5px rgba(15,23,42,0.10), 0 8px 10px -6px rgba(15,23,42,0.05);
+
+      /* Compatibility aliases used by the existing card styles */
+      --user-bg: var(--accent);
+      --bot-bg: var(--surface);
+      --white: var(--surface);
+      --navy: var(--surface);
+      --navy-mid: var(--accent);
+      --accent-light: var(--accent-soft);
+    }
+
+    [data-theme="dark"] {
+      --bg: #0B1220;
+      --surface: #111827;
+      --surface-elev: #0F1B2D;
+      --text: #E5E7EB;
+      --text-muted: #94A3B8;
+      --border: #1F2937;
+      --border-strong: #334155;
+      --accent: #818CF8;
+      --accent-hover: #6366F1;
+      --accent-soft: #1E1B4B;
+      --shadow: 0 1px 2px rgba(0,0,0,0.4), 0 1px 3px rgba(0,0,0,0.5);
+      --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.5), 0 2px 4px -2px rgba(0,0,0,0.4);
+      --shadow-lg: 0 10px 25px -5px rgba(0,0,0,0.6), 0 8px 10px -6px rgba(0,0,0,0.5);
+    }
+
+    html, body { height: 100%; overflow: hidden; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: grid;
+      grid-template-columns: 260px 1fr;
+      height: 100vh;
+      transition: background-color 0.2s, color 0.2s;
+    }
+    body.sidebar-collapsed { grid-template-columns: 0 1fr; }
+    body.sidebar-collapsed .sidebar { transform: translateX(-100%); }
+
+    .app-main {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    /* ── Sidebar ── */
+    .sidebar {
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 20px 14px;
+      overflow-y: auto;
+      transition: transform 0.2s ease;
+    }
+    .sidebar-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 4px 8px 18px;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 14px;
+    }
+    .sidebar-brand .mark {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: var(--accent);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+    }
+    .sidebar-brand .name {
+      font-size: 14px; font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+    .sidebar-brand .sub {
+      font-size: 11px; color: var(--text-muted); margin-top: 1px;
+    }
+    .sidebar h3 {
+      font-size: 10.5px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      font-weight: 600;
+      margin: 6px 8px 10px;
+    }
+    .section-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .section-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--text-muted);
+      cursor: default;
+      transition: background 0.15s, color 0.15s;
+    }
+    .section-item .step {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--border);
+      color: var(--text-muted);
+      font-size: 11px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .section-item.active {
+      background: var(--accent-soft);
+      color: var(--accent);
+      font-weight: 600;
+    }
+    .section-item.active .step { background: var(--accent); color: #fff; }
+    .section-item.done { color: var(--text); }
+    .section-item.done .step {
+      background: var(--success);
+      color: #fff;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--surface);
+      color: var(--text);
+      padding: 0 20px;
+      height: 60px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
+    }
+    .icon-btn {
+      width: 36px; height: 36px;
+      display: inline-flex; align-items: center; justify-content: center;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s, border-color 0.15s;
+    }
+    .icon-btn:hover { background: var(--surface-elev); color: var(--text); border-color: var(--border-strong); }
+    .icon-btn svg { width: 16px; height: 16px; }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .logo-icon svg { width: 18px; height: 18px; }
+    .logo-icon img { width: 26px; height: 26px; object-fit: contain; display: block; }
+    .sidebar-brand .mark img { width: 24px; height: 24px; object-fit: contain; display: block; }
+    .logo-icon:has(img), .sidebar-brand .mark:has(img) {
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+
+    .header-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text);
+    }
+
+    .header-sub {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.15s;
+    }
+
+    .btn:disabled { opacity: 0.55; cursor: not-allowed; }
+
+    .btn-export {
+      background: var(--accent);
+      color: #fff;
+    }
+    .btn-export:hover:not(:disabled) { background: var(--accent-hover); }
+
+    .btn-submit {
+      background: var(--success);
+      color: #fff;
+    }
+    .btn-submit:hover:not(:disabled) { filter: brightness(0.95); }
+
+    .btn-reset {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-reset:hover:not(:disabled) { background: var(--surface-elev); border-color: var(--border-strong); }
+
+    /* ── Chat area ── */
+    .chat-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 24px 20px 12px;
+      scroll-behavior: smooth;
+    }
+
+    .messages {
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Message bubbles ── */
+    .msg {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      animation: fadeUp 0.2s ease;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg.user { flex-direction: row-reverse; }
+
+    .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      margin-top: 2px;
+    }
+
+    .msg.bot .avatar { background: var(--accent-soft); color: var(--accent); }
+    .msg.user .avatar { background: var(--user-bg); color: #fff; }
+
+    .bubble {
+      max-width: 100%;
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 14px;
+      line-height: 1.6;
+      box-shadow: var(--shadow);
+      overflow-wrap: break-word;
+      word-break: break-word;
+    }
+
+    .msg.bot .bubble {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-top-left-radius: 4px;
+    }
+
+    .msg.user .bubble {
+      background: var(--user-bg);
+      color: #fff;
+      border-top-right-radius: 4px;
+    }
+
+    /* Markdown styling inside bot bubbles */
+    .bubble p { margin-bottom: 8px; }
+    .bubble p:last-child { margin-bottom: 0; }
+    .bubble ul, .bubble ol { padding-left: 20px; margin-bottom: 8px; }
+    .bubble li { margin-bottom: 3px; }
+    .bubble strong { font-weight: 600; }
+    .bubble code {
+      background: var(--surface-elev);
+      border: 1px solid var(--border);
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 12.5px;
+      font-family: 'Menlo', 'Consolas', monospace;
+    }
+    .bubble h1, .bubble h2, .bubble h3 {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+    .bubble hr { border: none; border-top: 1px solid var(--border); margin: 10px 0; }
+
+    /* Typing cursor */
+    .cursor::after {
+      content: '▋';
+      animation: blink 0.7s infinite;
+      color: var(--accent);
+      font-size: 12px;
+    }
+
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0; }
+    }
+
+    /* Thinking indicator */
+    .thinking-dots {
+      display: inline-flex;
+      gap: 4px;
+      padding: 4px 0;
+    }
+    .thinking-dots span {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-muted);
+      animation: dot-bounce 1.2s infinite ease-in-out;
+    }
+    .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes dot-bounce {
+      0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
+      40%           { transform: scale(1);   opacity: 1; }
+    }
+
+    /* ── Timestamp ── */
+    .msg-time {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      padding: 0 4px;
+      align-self: flex-end;
+    }
+
+    /* ── Input area ── */
+    .input-area {
+      background: var(--white);
+      border-top: 1px solid var(--border);
+      padding: 14px 20px;
+      flex-shrink: 0;
+    }
+
+    .input-inner {
+      max-width: 780px;
+      margin: 0 auto;
+      display: flex;
+      gap: 10px;
+      align-items: flex-end;
+    }
+
+    textarea {
+      flex: 1;
+      resize: none;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 11px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      line-height: 1.5;
+      max-height: 140px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      background: var(--surface-elev);
+      color: var(--text);
+    }
+    textarea:focus {
+      border-color: var(--accent);
+      background: var(--surface);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    textarea::placeholder { color: var(--text-muted); }
+
+    .btn-send {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s, transform 0.1s;
+    }
+    .btn-send:hover:not(:disabled) { background: var(--accent-hover); }
+    .btn-send:active:not(:disabled) { transform: scale(0.95); }
+    .btn-send:disabled { background: var(--border-strong); cursor: not-allowed; }
+
+    .btn-send svg { width: 18px; height: 18px; }
+
+    /* ── Status bar ── */
+    .status-bar {
+      max-width: 780px;
+      margin: 0 auto 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      min-height: 16px;
+    }
+
+    .status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--success);
+      flex-shrink: 0;
+    }
+    .status-dot.thinking { background: var(--warning); animation: pulse 1s infinite; }
+
+    /* ── Responsive ── */
+    @media (max-width: 860px) {
+      body { grid-template-columns: 0 1fr; }
+      .sidebar {
+        position: fixed;
+        top: 0; left: 0;
+        height: 100vh;
+        width: 260px;
+        z-index: 50;
+        transform: translateX(-100%);
+        box-shadow: var(--shadow-lg);
+      }
+      body.sidebar-open .sidebar { transform: translateX(0); }
+      .header-sub { display: none; }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.4; }
+    }
+
+    /* ── Contact card (inline form embedded in bot message) ── */
+    .contact-card {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 10px 0;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+
+    .contact-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .contact-card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .contact-card-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .contact-card-body .contact-field:last-child:nth-child(odd) {
+      grid-column: 1 / -1;
+    }
+
+    .contact-field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .contact-field input {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      background: white;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .contact-field input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
+    }
+
+    .contact-card-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.15s;
+    }
+
+    .contact-card-btn:hover { background: #1d4ed8; }
+
+    .contact-card-skip-btn {
+      background: transparent;
+      color: #64748b;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .contact-card-skip-btn:hover { background: #f1f5f9; color: #334155; }
+
+    .contact-card-submitted {
+      color: #16a34a;
+      font-weight: 500;
+      font-size: 13px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .contact-req { color: #dc2626; }
+
+    /* ── Image Exposure card ── */
+    .img-exposure-card {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 14px;
+      padding: 20px;
+      margin: 10px 0;
+      width: 420px;
+    }
+
+    .img-exposure-card-header {
+      font-weight: 700;
+      font-size: 13px;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .img-exposure-option {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 16px;
+      margin-bottom: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      background: var(--white);
+    }
+
+    .img-exposure-option:hover { border-color: var(--accent); background: var(--accent-light); }
+
+    .img-exposure-option.selected {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .img-exposure-option input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .img-exposure-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      background: #e0eaff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .img-exposure-option.selected .img-exposure-icon { background: #bfdbfe; }
+
+    .img-exposure-label { flex: 1; }
+
+    .img-exposure-label strong {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .img-exposure-label span {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .img-exposure-badge {
+      font-size: 10px;
+      font-weight: 700;
+      background: #dbeafe;
+      color: #1d4ed8;
+      border-radius: 6px;
+      padding: 2px 7px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-left: 6px;
+    }
+
+    .img-exposure-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 6px;
+      transition: background 0.15s;
+    }
+    .img-exposure-btn:hover { background: #1d4ed8; }
+
+    .img-exposure-submitted {
+      color: #16a34a;
+      font-weight: 500;
+      font-size: 13px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Web Portal Image Archive card ── */
+    .wpia-card {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 14px;
+      padding: 20px;
+      margin: 10px 0;
+      width: 460px;
+      box-shadow: var(--shadow);
+    }
+
+    .wpia-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .wpia-card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 9px;
+      background: #dbeafe;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .wpia-card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .wpia-card-subtitle {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      font-weight: 400;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    /* Yes/No toggle row */
+    .wpia-yn-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .wpia-yn-btn {
+      flex: 1;
+      padding: 10px 0;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 2px solid #cbd5e1;
+      background: #f8fafc;
+      color: #475569;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .wpia-yn-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+
+    .wpia-yn-btn.active-yes {
+      border-color: #2563eb;
+      background: var(--accent-light);
+      color: #1d4ed8;
+    }
+
+    .wpia-yn-btn.active-no {
+      border-color: #dc2626;
+      background: #fef2f2;
+      color: #dc2626;
+    }
+
+    /* Expandable section */
+    .wpia-details {
+      display: none;
+      animation: fadeUp 0.18s ease;
+    }
+
+    .wpia-details.visible { display: block; }
+
+    .wpia-section-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .wpia-section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+
+    /* Archive items checkboxes */
+    .wpia-archive-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 18px;
+    }
+
+    .wpia-check-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      background: #f8fafc;
+      user-select: none;
+    }
+
+    .wpia-check-item:hover { border-color: #93c5fd; background: var(--accent-light); }
+
+    .wpia-check-item.checked {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .wpia-check-item.disabled-check {
+      border-color: #2563eb;
+      background: var(--accent-light);
+      cursor: default;
+    }
+
+    .wpia-check-item input[type="checkbox"] {
+      width: 17px;
+      height: 17px;
+      accent-color: var(--accent);
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .wpia-check-item.disabled-check input[type="checkbox"] {
+      accent-color: #2563eb;
+    }
+
+    .wpia-check-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: #e0eaff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: background 0.15s;
+    }
+
+    .wpia-check-item.checked .wpia-check-icon,
+    .wpia-check-item.disabled-check .wpia-check-icon { background: #bfdbfe; }
+
+    .wpia-check-item.disabled-check .wpia-check-icon { background: #bfdbfe; }
+
+    .wpia-check-label { flex: 1; }
+
+    .wpia-check-label strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .wpia-check-label span {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    .wpia-required-badge {
+      font-size: 10px;
+      font-weight: 700;
+      background: #dbeafe;
+      color: #1d4ed8;
+      border-radius: 6px;
+      padding: 2px 7px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      flex-shrink: 0;
+    }
+
+    /* Full page scanning toggle */
+    .wpia-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      background: #f8fafc;
+      margin-bottom: 18px;
+      transition: border-color 0.15s, background 0.15s;
+    }
+
+    .wpia-toggle-row.on {
+      border-color: var(--accent);
+      background: var(--accent-light);
+    }
+
+    .wpia-toggle-info strong {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text);
+      margin-bottom: 2px;
+    }
+
+    .wpia-toggle-info span {
+      font-size: 11.5px;
+      color: var(--text-muted);
+    }
+
+    /* Custom toggle switch */
+    .wpia-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      flex-shrink: 0;
+    }
+
+    .wpia-switch input { opacity: 0; width: 0; height: 0; }
+
+    .wpia-slider {
+      position: absolute;
+      inset: 0;
+      background: #cbd5e1;
+      border-radius: 24px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .wpia-slider::before {
+      content: '';
+      position: absolute;
+      height: 18px;
+      width: 18px;
+      left: 3px;
+      top: 3px;
+      background: white;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+
+    .wpia-switch input:checked + .wpia-slider { background: var(--accent); }
+    .wpia-switch input:checked + .wpia-slider::before { transform: translateX(20px); }
+
+    /* Submit button */
+    .wpia-submit-btn {
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      padding: 10px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 2px;
+      transition: background 0.15s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .wpia-submit-btn:hover { background: #1d4ed8; }
+    .wpia-submit-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+
+    .wpia-submitted {
+      color: #1e40af;
+      font-weight: 500;
+      font-size: 13px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Yes/No option buttons ── */
+    .yn-row { display: flex; gap: 8px; margin-top: 12px; }
+    .yn-btn {
+      padding: 6px 22px;
+      border: 1.5px solid #2563eb;
+      border-radius: 8px;
+      background: white;
+      color: #2563eb;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, color 0.15s;
+    }
+    .yn-btn:hover:not(:disabled) { background: #2563eb; color: white; }
+    .yn-btn.selected { background: #2563eb; color: white; }
+    .yn-btn:disabled { cursor: default; opacity: 0.5; }
+    .yn-btn.selected:disabled { opacity: 1; }
+
+    /* ── Date picker card ── */
+    .date-picker-card {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 10px 0;
+    }
+
+    .date-picker-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .date-picker-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .date-picker-body {
+      margin-bottom: 14px;
+    }
+
+    .date-picker-body input[type="date"] {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 9px 12px;
+      font-size: 14px;
+      font-family: inherit;
+      background: white;
+      outline: none;
+      color: #1e293b;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .date-picker-body input[type="date"]:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
+    }
+
+    .date-picker-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.15s;
+    }
+
+    .date-picker-btn:hover { background: #1d4ed8; }
+
+    .date-picker-submitted {
+      color: #16a34a;
+      font-weight: 500;
+      font-size: 13px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Deposit banking card ── */
+    .deposit-card {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 10px 0;
+    }
+
+    .deposit-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .deposit-card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .deposit-card-section {
+      font-size: 11px;
+      font-weight: 700;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 12px 0 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #bbf7d0;
+    }
+
+    .deposit-card-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 4px;
+    }
+
+    .deposit-card-body.full {
+      grid-template-columns: 1fr;
+    }
+
+    .deposit-field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .deposit-field input {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      background: white;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .deposit-field input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
+    }
+
+    .deposit-card-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 14px;
+      transition: background 0.15s;
+    }
+
+    .deposit-card-btn:hover { background: #1d4ed8; }
+
+    .deposit-card-submitted {
+      color: #16a34a;
+      font-weight: 500;
+      font-size: 13px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Exception handling card ── */
+    .exception-card {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 10px 0;
+    }
+
+    .exception-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .exception-card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .exception-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 8px;
+      background: white;
+      border: 1px solid #bfdbfe;
+      margin-bottom: 6px;
+      gap: 10px;
+    }
+
+    .exception-row-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #1e293b;
+      flex: 1;
+    }
+
+    .exception-row-btns {
+      display: flex;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .exc-btn {
+      padding: 5px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+      white-space: nowrap;
+    }
+
+    .exc-btn.accept {
+      border-color: #2563eb;
+      color: #2563eb;
+      background: white;
+    }
+    .exc-btn.accept:hover  { background: #2563eb; color: white; }
+    .exc-btn.accept.active { background: #2563eb; color: white; }
+
+    .exc-btn.return {
+      border-color: #2563eb;
+      color: #2563eb;
+      background: white;
+    }
+    .exc-btn.return:hover  { background: #2563eb; color: white; }
+    .exc-btn.return.active { background: #2563eb; color: white; }
+
+    .exception-card-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 10px;
+      transition: background 0.15s;
+    }
+    .exception-card-btn:hover { background: #1d4ed8; }
+
+    .exception-card-submitted {
+      color: #1e40af;
+      font-weight: 500;
+      font-size: 13px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Backup destruction card ── */
+    .backup-card {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 10px 0;
+    }
+
+    .backup-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .backup-card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .backup-option {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 11px 14px;
+      border-radius: 8px;
+      background: white;
+      border: 1.5px solid #bfdbfe;
+      margin-bottom: 8px;
+      cursor: pointer;
+      transition: border-color 0.12s, background 0.12s;
+      user-select: none;
+    }
+
+    .backup-option:hover { border-color: #2563eb; background: #eff6ff; }
+
+    .backup-option.selected {
+      border-color: #2563eb;
+      background: #dbeafe;
+    }
+
+    .backup-checkbox {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 2px solid #d1d5db;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      transition: border-color 0.12s, background 0.12s;
+    }
+
+    .backup-option.selected .backup-checkbox {
+      border-color: #2563eb;
+      background: #2563eb;
+    }
+
+    .backup-checkbox-tick {
+      display: none;
+      width: 10px;
+      height: 10px;
+      fill: white;
+    }
+
+    .backup-option.selected .backup-checkbox-tick { display: block; }
+
+    .backup-option-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: #1e293b;
+    }
+
+    .backup-option.selected .backup-option-label { color: #1e40af; font-weight: 600; }
+
+    .backup-card-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 4px;
+      transition: background 0.15s;
+    }
+    .backup-card-btn:hover { background: #1d4ed8; }
+
+    .backup-card-submitted {
+      color: #1e40af;
+      font-weight: 500;
+      font-size: 13px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Emailed reports card (multi-select + email) ── */
+    .emrep-email-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #1e40af;
+      margin: 10px 0 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .emrep-email-input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 8px;
+      font-size: 13px;
+      background: white;
+      margin-bottom: 10px;
+      box-sizing: border-box;
+    }
+    .emrep-email-input:focus { outline: none; border-color: #2563eb; }
+
+    /* ── Mail out method card ── */
+    .mailout-card {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 10px 0;
+    }
+
+    .mailout-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .mailout-card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .mailout-method-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .mailout-method-btn {
+      flex: 1;
+      padding: 12px 10px;
+      border-radius: 8px;
+      background: white;
+      border: 1.5px solid #bfdbfe;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 500;
+      color: #1e293b;
+      text-align: center;
+      transition: border-color 0.12s, background 0.12s;
+      user-select: none;
+    }
+
+    .mailout-method-btn:hover { border-color: #2563eb; background: #eff6ff; }
+
+    .mailout-method-btn.selected {
+      border-color: #2563eb;
+      background: #dbeafe;
+      color: #1e40af;
+      font-weight: 600;
+    }
+
+    .mailout-express-options {
+      display: none;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+    }
+
+    .mailout-express-options.visible { display: block; }
+
+    .mailout-express-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+      margin-top: 4px;
+    }
+
+    .mailout-speed-row, .mailout-carrier-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .mailout-speed-btn, .mailout-carrier-btn {
+      flex: 1;
+      padding: 9px 8px;
+      border-radius: 6px;
+      background: white;
+      border: 1.5px solid #bfdbfe;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      color: #374151;
+      text-align: center;
+      transition: border-color 0.12s, background 0.12s;
+      user-select: none;
+    }
+
+    .mailout-speed-btn:hover, .mailout-carrier-btn:hover { border-color: #2563eb; background: #eff6ff; }
+
+    .mailout-speed-btn.selected, .mailout-carrier-btn.selected {
+      border-color: #2563eb;
+      background: #dbeafe;
+      color: #1e40af;
+      font-weight: 600;
+    }
+
+    .mailout-account-field { margin-top: 8px; }
+
+    .mailout-account-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #374151;
+      margin-bottom: 4px;
+    }
+
+    .mailout-account-field input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 10px;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+      transition: border-color 0.12s;
+    }
+
+    .mailout-account-field input:focus { border-color: #2563eb; }
+
+    .mailout-card-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 4px;
+      transition: background 0.15s;
+    }
+    .mailout-card-btn:hover { background: #1d4ed8; }
+
+    .mailout-card-submitted {
+      color: #1e40af;
+      font-weight: 500;
+      font-size: 13px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Discrepancy handling card ── */
+    .discrepancy-card {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 10px 0;
+    }
+
+    .discrepancy-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .discrepancy-card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .discrepancy-question {
+      font-size: 13px;
+      color: #1e293b;
+      margin-bottom: 14px;
+      line-height: 1.5;
+    }
+
+    .discrepancy-btns {
+      display: flex;
+      gap: 10px;
+    }
+
+    .disc-btn {
+      flex: 1;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid transparent;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+
+    .disc-btn.legal {
+      border-color: #2563eb;
+      color: #2563eb;
+      background: white;
+    }
+    .disc-btn.legal:hover  { background: #2563eb; color: white; }
+    .disc-btn.legal.active { background: #2563eb; color: white; border-color: #2563eb; }
+
+    .disc-btn.return {
+      border-color: #2563eb;
+      color: #2563eb;
+      background: white;
+    }
+    .disc-btn.return:hover  { background: #2563eb; color: white; }
+    .disc-btn.return.active { background: #2563eb; color: white; border-color: #2563eb; }
+
+    .discrepancy-card-submitted {
+      color: #1e40af;
+      font-weight: 500;
+      font-size: 13px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Data capture card ── */
+    .datacap-card {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 10px 0;
+    }
+
+    .datacap-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .datacap-card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .datacap-col-headers {
+      display: grid;
+      grid-template-columns: 20px 1fr 90px 110px 1fr;
+      gap: 8px;
+      padding: 0 10px 6px;
+      align-items: center;
+    }
+
+    .datacap-col-headers span {
+      font-size: 10px;
+      font-weight: 700;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .datacap-row {
+      display: grid;
+      grid-template-columns: 20px 1fr 90px 110px 1fr;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: white;
+      border: 1px solid #bfdbfe;
+      margin-bottom: 5px;
+    }
+
+    .datacap-row input[type="checkbox"] {
+      width: 15px;
+      height: 15px;
+      accent-color: #2563eb;
+      cursor: pointer;
+    }
+
+    .datacap-row-name {
+      font-size: 13px;
+      font-weight: 500;
+      color: #1e293b;
+    }
+
+    .datacap-row input[type="text"] {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 12px;
+      font-family: inherit;
+      background: #f8fafc;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .datacap-row input[type="text"]:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
+      background: white;
+    }
+
+    .datacap-row input[type="text"]:disabled {
+      background: #f1f5f9;
+      color: #94a3b8;
+      cursor: not-allowed;
+    }
+
+    .datacap-custom-section {
+      font-size: 11px;
+      font-weight: 700;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 12px 0 6px;
+      padding-bottom: 4px;
+      border-bottom: 1px solid #bfdbfe;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .datacap-add-btn {
+      background: transparent;
+      color: #2563eb;
+      border: 1.5px solid #2563eb;
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+    .datacap-add-btn:hover { background: #2563eb; color: white; }
+
+    .datacap-card-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 12px;
+      transition: background 0.15s;
+    }
+    .datacap-card-btn:hover { background: #1d4ed8; }
+
+    .datacap-card-submitted {
+      color: #1e40af;
+      font-weight: 500;
+      font-size: 13px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Scanline definition card ── */
+    .scanline-card {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 10px 0;
+    }
+
+    .scanline-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .scanline-card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .scanline-table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0 5px;
+    }
+
+    .scanline-table thead th {
+      font-size: 10px;
+      font-weight: 700;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0 6px 6px;
+      text-align: left;
+    }
+
+    .scanline-table tbody tr {
+      background: white;
+    }
+
+    .scanline-table tbody td {
+      padding: 4px 4px;
+    }
+
+    .scanline-table tbody td:first-child { padding-left: 8px; border-radius: 8px 0 0 8px; }
+    .scanline-table tbody td:last-child  { padding-right: 4px; border-radius: 0 8px 8px 0; }
+
+    .scanline-table tbody tr {
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+    }
+
+    .scanline-table input[type="text"] {
+      width: 100%;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 6px 8px;
+      font-size: 12px;
+      font-family: inherit;
+      background: #f8fafc;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .scanline-table input[type="text"]:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
+      background: white;
+    }
+
+    .scanline-del-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 4px 6px;
+      border-radius: 4px;
+      transition: color 0.12s, background 0.12s;
+    }
+    .scanline-del-btn:hover { color: #dc2626; background: #fee2e2; }
+
+    .scanline-add-btn {
+      background: transparent;
+      color: #2563eb;
+      border: 1.5px solid #2563eb;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 8px;
+      transition: background 0.12s, color 0.12s;
+    }
+    .scanline-add-btn:hover { background: #2563eb; color: white; }
+
+    .scanline-card-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      margin-top: 12px;
+      transition: background 0.15s;
+    }
+    .scanline-card-btn:hover { background: #1d4ed8; }
+
+    .scanline-card-submitted {
+      color: #1e40af;
+      font-weight: 500;
+      font-size: 13px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Payee verification card ── */
+    .payee-card {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 10px 0;
+    }
+
+    .payee-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .payee-card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .payee-mode-btns {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .payee-mode-btn {
+      flex: 1;
+      padding: 12px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1.5px solid #2563eb;
+      background: white;
+      color: #2563eb;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+      text-align: center;
+    }
+
+    .payee-mode-btn:hover { background: #2563eb; color: white; }
+
+    .payee-mode-btn.active {
+      background: #2563eb;
+      color: white;
+      border-color: #2563eb;
+    }
+
+    .payee-list-section {
+      display: none;
+      margin-bottom: 10px;
+    }
+
+    .payee-list-section.visible { display: block; }
+
+    .payee-list-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #374151;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .payee-add-btn {
+      background: transparent;
+      color: #2563eb;
+      border: 1.5px solid #2563eb;
+      border-radius: 6px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.12s, color 0.12s;
+    }
+    .payee-add-btn:hover { background: #2563eb; color: white; }
+
+    .payee-input-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+      align-items: center;
+    }
+
+    .payee-input-row input {
+      flex: 1;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      background: white;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .payee-input-row input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
+    }
+
+    .payee-del-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      font-size: 16px;
+      line-height: 1;
+      padding: 4px 6px;
+      border-radius: 4px;
+      flex-shrink: 0;
+      transition: color 0.12s, background 0.12s;
+    }
+    .payee-del-btn:hover { color: #dc2626; background: #fee2e2; }
+
+    .payee-charge-note {
+      font-size: 11.5px;
+      color: #64748b;
+      margin-top: 6px;
+      margin-bottom: 10px;
+      font-style: italic;
+    }
+
+    .payee-card-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.15s;
+    }
+    .payee-card-btn:hover { background: #1d4ed8; }
+
+    .payee-card-submitted {
+      color: #1e40af;
+      font-weight: 500;
+      font-size: 13px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Mailing address card ── */
+    .mailing-card {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 10px 0;
+    }
+
+    .mailing-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .mailing-card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .mailing-card-body {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .mailing-card-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mailing-field label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: #475569;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .mailing-field input {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 7px 10px;
+      font-size: 13px;
+      font-family: inherit;
+      background: white;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+
+    .mailing-field input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 2px rgba(37,99,235,0.1);
+    }
+
+    .mailing-card-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.15s;
+    }
+    .mailing-card-btn:hover { background: #1d4ed8; }
+
+    .mailing-card-submitted {
+      color: #1e40af;
+      font-weight: 500;
+      font-size: 13px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Web Portal Admin card (3.12) ── */
+    .wpa-card {
+      background: #f0f7ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 16px;
+      margin: 10px 0;
+    }
+    .wpa-card-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .wpa-card-title {
+      font-weight: 700;
+      font-size: 13px;
+      color: #1e40af;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .wpa-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .wpa-admin {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .wpa-admin.primary { border: 1.5px solid #bfdbfe; }
+    .wpa-admin.secondary { border: 1.5px solid #e2e8f0; }
+    .wpa-admin-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .wpa-admin.primary .wpa-admin-hdr {
+      background: linear-gradient(135deg, #eff6ff, #dbeafe);
+      color: #1e3a8a;
+      border-bottom: 1.5px solid #bfdbfe;
+    }
+    .wpa-admin.secondary .wpa-admin-hdr {
+      background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+      color: #475569;
+      border-bottom: 1.5px solid #e2e8f0;
+    }
+    .wpa-badge {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      letter-spacing: 0.06em;
+    }
+    .wpa-admin.primary .wpa-badge { background: #1e40af; color: white; }
+    .wpa-admin.secondary .wpa-badge { background: #475569; color: white; }
+    .wpa-admin-body {
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .wpa-card-btn {
+      background: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 9px 16px;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      width: 100%;
+      transition: background 0.15s;
+    }
+    .wpa-card-btn:hover { background: #1d4ed8; }
+    .wpa-submitted {
+      color: #1e40af;
+      font-weight: 500;
+      font-size: 13px;
+      padding: 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ── Card edit button ── */
+    .card-submitted-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .card-edit-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      background: transparent;
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 4px 12px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #64748b;
+      cursor: pointer;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: background 0.12s, color 0.12s, border-color 0.12s;
+    }
+    .card-edit-btn:hover { background: #f1f5f9; color: #1e293b; border-color: #94a3b8; }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: #1e293b;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 100px;
+      font-size: 13px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s;
+      pointer-events: none;
+      z-index: 100;
+      white-space: nowrap;
+    }
+    .toast.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    /* ── Landing screen ── */
+    body.landing-mode { display: block; height: 100vh; overflow-y: auto; background: var(--bg); }
+    body.landing-mode .sidebar,
+    body.landing-mode .app-main { display: none; }
+
+    .landing-wrap {
+      display: none;
+      min-height: 100vh;
+      padding: 48px 20px;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    body.landing-mode .landing-wrap { display: flex; }
+
+    .landing-card {
+      width: 100%;
+      max-width: 640px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+    .landing-body { padding: 36px 36px 0; }
+    .landing-head {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      margin-bottom: 22px;
+    }
+    .landing-mark {
+      width: 64px; height: 64px;
+      border-radius: 14px;
+      background: #14B8A6;
+      display: flex; align-items: center; justify-content: center;
+      color: #fff;
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      flex-shrink: 0;
+    }
+    .landing-title {
+      font-size: 26px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      line-height: 1.15;
+    }
+    .landing-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .landing-lede {
+      font-size: 15px;
+      color: var(--text);
+      line-height: 1.55;
+      margin-bottom: 22px;
+    }
+    .form-field { margin-bottom: 18px; }
+    .form-field label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text);
+      margin-bottom: 8px;
+    }
+    .form-field .optional {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 500;
+      text-transform: none;
+      letter-spacing: 0;
+      margin-left: 6px;
+    }
+    .form-field input {
+      width: 100%;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 13px 14px;
+      font-size: 14px;
+      font-family: inherit;
+      background: var(--surface);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .form-field input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px var(--accent-soft);
+    }
+    .form-field input.error { border-color: var(--danger); }
+    .form-field .err-msg {
+      font-size: 12px;
+      color: var(--danger);
+      margin-top: 4px;
+      display: none;
+    }
+    .form-field input.error + .err-msg { display: block; }
+
+    .landing-cta {
+      display: block;
+      width: 100%;
+      padding: 18px 24px;
+      background: #0f1f3d;
+      background: linear-gradient(180deg, #1a3460 0%, #0f1f3d 100%);
+      color: #fff;
+      border: none;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: filter 0.15s;
+      margin-top: 8px;
+    }
+    .landing-cta:hover { filter: brightness(1.1); }
+    .landing-cta:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* Username pill in chat header */
+    .user-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px 6px 6px;
+      background: var(--surface-elev);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      font-size: 13px;
+      color: var(--text);
+      margin-right: 8px;
+    }
+    .user-pill .uavatar {
+      width: 24px; height: 24px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #fff;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+    }
+    .user-pill .uname { font-weight: 500; }
+  </style>
+</head>
+<body class="landing-mode">
+
+<!-- ── Landing / identity screen ── -->
+<div class="landing-wrap" id="landingWrap">
+  <div class="landing-card">
+    <div class="landing-body">
+      <div class="landing-head">
+        <div class="landing-mark">L</div>
+        <div>
+          <div class="landing-title">Lockbox Setup Concierge</div>
+          <div class="landing-subtitle">Lockbox Implementation</div>
+        </div>
+      </div>
+      <p class="landing-lede">
+        Please confirm your portal identity to begin. Your Implementation Consultant will receive the completed questionnaire when you submit.
+      </p>
+
+      <form id="identityForm" novalidate>
+        <div class="form-field">
+          <label for="lf-name">Full Name</label>
+          <input type="text" id="lf-name" name="name" autocomplete="name" required>
+          <div class="err-msg">Please enter your full name.</div>
+        </div>
+        <div class="form-field">
+          <label for="lf-email">Email</label>
+          <input type="email" id="lf-email" name="email" autocomplete="email" required>
+          <div class="err-msg">Please enter a valid email.</div>
+        </div>
+        <div class="form-field">
+          <label for="lf-company">Company</label>
+          <input type="text" id="lf-company" name="company" autocomplete="organization" required>
+          <div class="err-msg">Please enter your company.</div>
+        </div>
+        <div class="form-field">
+          <label for="lf-role">Role <span class="optional">(optional)</span></label>
+          <input type="text" id="lf-role" name="role" autocomplete="organization-title">
+        </div>
+      </form>
+    </div>
+    <button type="button" class="landing-cta" id="landingStartBtn" onclick="startQuestionnaire()">Start questionnaire →</button>
+  </div>
+</div>
+
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="mark">
+      <img src="/static/logo.png" alt="XBP Global" />
+    </div>
+    <div>
+      <div class="name">Lockbox Questionnaire</div>
+      <div class="sub">XBP Global</div>
+    </div>
+  </div>
+  <h3>Progress</h3>
+  <ol class="section-list" id="sectionList">
+    <li class="section-item" data-section="0"><span class="step">0</span><span>Lockbox Type</span></li>
+    <li class="section-item" data-section="1"><span class="step">1</span><span>Contacts &amp; Approval</span></li>
+    <li class="section-item" data-section="2"><span class="step">2</span><span>General Information</span></li>
+    <li class="section-item" data-section="3"><span class="step">3</span><span>Processing Instructions</span></li>
+    <li class="section-item" data-section="4"><span class="step">4</span><span>Reporting</span></li>
+    <li class="section-item" data-section="5"><span class="step">5</span><span>Data Entry</span></li>
+    <li class="section-item" data-section="6"><span class="step">6</span><span>Remittance Coupon</span></li>
+    <li class="section-item" data-section="7"><span class="step">7</span><span>Transmission Files</span></li>
+  </ol>
+</aside>
+
+<div class="app-main">
+
+<header>
+  <div class="header-left">
+    <button class="icon-btn" id="sidebarToggle" onclick="toggleSidebar()" title="Toggle sidebar" aria-label="Toggle sidebar">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+    <div class="logo-icon" aria-hidden="true">
+      <img src="/static/logo.png" alt="XBP Global" />
+    </div>
+    <div>
+      <div class="header-title">Lockbox Questionnaire</div>
+      <div class="header-sub">Lockbox Implementation</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <span class="user-pill" id="userPill" style="display:none">
+      <span class="uavatar" id="userInitials"></span>
+      <span class="uname" id="userName"></span>
+    </span>
+    <span id="tokenBadge" title="Azure OpenAI tokens used this session" style="font-size:12px;color:var(--muted,#6b7280);border:1px solid var(--border,#d1d5db);border-radius:999px;padding:3px 10px;white-space:nowrap;">⚡ 0 tokens</span>
+    <button class="icon-btn" id="themeToggle" onclick="toggleTheme()" title="Toggle theme" aria-label="Toggle theme">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+    </button>
+    <button class="btn btn-export" id="saveBtn" onclick="manualSaveSession()" title="Save progress locally">
+      <svg viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px"><path d="M3 4a2 2 0 012-2h10l3 3v11a2 2 0 01-2 2H5a2 2 0 01-2-2V4zm5 0v4h4V4H8zm-2 9a1 1 0 011-1h6a1 1 0 011 1v3H6v-3z"/></svg>
+      Save
+    </button>
+    <button class="btn btn-export" id="resumeBtn" onclick="manualResumeSession()" title="Resume saved session" style="display:none;">
+      <svg viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"/></svg>
+      Resume
+    </button>
+    <button class="btn btn-export" id="exportBtn" onclick="exportJSON()" title="Download answers as JSON">
+      <svg viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+      Export JSON
+    </button>
+    <button class="btn btn-submit" id="submitBtn" onclick="submitToExcel()" title="Submit — save to Google Drive">
+      <svg viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+      Submit
+    </button>
+    <button class="btn btn-reset" onclick="resetChat()">
+      <svg viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"/></svg>
+      New Session
+    </button>
+  </div>
+</header>
+
+<div class="chat-wrap" id="chatWrap">
+  <div class="messages" id="messages"></div>
+</div>
+
+<div class="input-area">
+  <div class="status-bar">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Ready</span>
+  </div>
+  <div class="input-inner">
+    <textarea
+      id="userInput"
+      placeholder="Type your answer and press Enter to send…"
+      rows="1"
+      onkeydown="handleKey(event)"
+      oninput="autoResize(this)"
+    ></textarea>
+    <button class="btn-send" id="sendBtn" onclick="sendMessage()" title="Send (Enter)">
+      <svg viewBox="0 0 20 20" fill="currentColor">
+        <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009 15.571V11a1 1 0 112 0v4.571a1 1 0 00.725.962l5 1.428a1 1 0 001.17-1.408l-7-14z"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+</div><!-- /.app-main -->
+
+<script>
+  // Configure marked
+  marked.setOptions({ breaks: true, gfm: true });
+
+  let isStreaming = false;
+
+  /* ── Session persistence (resume in-progress questionnaire) ── */
+  const SESSION_KEY = 'lb-session';
+  const SESSION_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+  const clientHistory = [];
+
+  function saveSession() {
+    try {
+      const messagesEl = document.getElementById('messages');
+      if (!messagesEl || clientHistory.length === 0) return;
+      const payload = {
+        history: clientHistory,
+        messagesHTML: messagesEl.innerHTML,
+        progressMax: (typeof progressMax === 'number') ? progressMax : -1,
+        savedAt: Date.now(),
+        identity: getStoredUser(),
+      };
+      localStorage.setItem(SESSION_KEY, JSON.stringify(payload));
+      updateResumeBtnVisibility();
+    } catch (_) { /* quota or serialization errors → ignore */ }
+  }
+
+  function loadSavedSession() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      if (!raw) return null;
+      const data = JSON.parse(raw);
+      if (!data || !Array.isArray(data.history) || data.history.length === 0) return null;
+      if (Date.now() - (data.savedAt || 0) > SESSION_MAX_AGE_MS) {
+        localStorage.removeItem(SESSION_KEY);
+        return null;
+      }
+      return data;
+    } catch (_) { return null; }
+  }
+
+  function clearSavedSession() {
+    localStorage.removeItem(SESSION_KEY);
+  }
+
+  function manualSaveSession() {
+    if (clientHistory.length === 0) { showToast('Nothing to save yet — answer at least one question first.'); return; }
+    saveSession();
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (raw) {
+      showToast(`✓ Saved (${clientHistory.length} messages)`);
+      updateResumeBtnVisibility();
+    } else {
+      showToast('⚠ Save failed — localStorage may be disabled.');
+    }
+  }
+
+  async function manualResumeSession() {
+    const saved = loadSavedSession();
+    if (!saved) { showToast('No saved session found.'); return; }
+    const ok = await resumeSavedSession(saved);
+    if (ok) showToast(`✓ Resumed ${saved.history.length} messages from ${new Date(saved.savedAt).toLocaleString()}`);
+  }
+
+  function updateResumeBtnVisibility() {
+    const btn = document.getElementById('resumeBtn');
+    if (!btn) return;
+    btn.style.display = loadSavedSession() ? 'inline-flex' : 'none';
+  }
+
+  async function resumeSavedSession(data) {
+    try {
+      await fetch('/session/restore', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({history: data.history}),
+      });
+    } catch (e) {
+      showToast('⚠ Could not restore session on server: ' + e.message, 5000);
+      return false;
+    }
+    document.getElementById('messages').innerHTML = data.messagesHTML || '';
+    clientHistory.length = 0;
+    for (const m of data.history) clientHistory.push(m);
+    // Recompute sidebar progress from full assistant transcript
+    progressMax = -1;
+    document.querySelectorAll('.section-item').forEach(li => li.classList.remove('active', 'done'));
+    const allAssistantText = clientHistory.filter(m => m.role === 'assistant').map(m => m.content).join('\n');
+    updateProgress(allAssistantText);
+    setStatus('Session resumed');
+    showChat();
+    scrollBottom();
+    updateResumeBtnVisibility();
+    return true;
+  }
+
+  /* ── Identity / landing ── */
+  function getStoredUser() {
+    try { return JSON.parse(localStorage.getItem('lb-user') || 'null'); }
+    catch (_) { return null; }
+  }
+  function initials(name) {
+    return (name || '')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map(s => s.charAt(0).toUpperCase())
+      .join('') || '?';
+  }
+  function renderUserPill(user) {
+    if (!user || !user.name) return;
+    const pill = document.getElementById('userPill');
+    document.getElementById('userInitials').textContent = initials(user.name);
+    document.getElementById('userName').textContent = user.name;
+    pill.style.display = 'inline-flex';
+    pill.title = `${user.name}${user.email ? ' · ' + user.email : ''}${user.company ? ' · ' + user.company : ''}`;
+  }
+  function showChat() {
+    document.body.classList.remove('landing-mode');
+  }
+  function showLanding() {
+    document.body.classList.add('landing-mode');
+  }
+  function startQuestionnaire() {
+    const fields = ['name', 'email', 'company'];
+    let firstBad = null;
+    const data = {};
+    for (const f of fields) {
+      const el = document.getElementById('lf-' + f);
+      const v = el.value.trim();
+      let bad = !v;
+      if (f === 'email' && v && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) bad = true;
+      el.classList.toggle('error', bad);
+      if (bad && !firstBad) firstBad = el;
+      data[f] = v;
+    }
+    data.role = document.getElementById('lf-role').value.trim();
+    if (firstBad) { firstBad.focus(); return; }
+    localStorage.setItem('lb-user', JSON.stringify(data));
+    renderUserPill(data);
+    showChat();
+    startSession();
+  }
+
+  /* ── Theme toggle (persisted) ── */
+  (function initTheme() {
+    const saved = localStorage.getItem('lb-theme');
+    if (saved === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+  })();
+  function toggleTheme() {
+    const root = document.documentElement;
+    const isDark = root.getAttribute('data-theme') === 'dark';
+    if (isDark) { root.removeAttribute('data-theme'); localStorage.setItem('lb-theme', 'light'); }
+    else        { root.setAttribute('data-theme', 'dark'); localStorage.setItem('lb-theme', 'dark'); }
+  }
+
+  /* ── Sidebar toggle ── */
+  function toggleSidebar() {
+    const isMobile = window.matchMedia('(max-width: 860px)').matches;
+    if (isMobile) document.body.classList.toggle('sidebar-open');
+    else          document.body.classList.toggle('sidebar-collapsed');
+  }
+
+  /* ── Section progress tracking ── */
+  // Only match unambiguous signals:
+  //   - explicit "**SECTION N" headers the bot emits when moving to a new section
+  //   - the bracketed card markers (each tied to a single section)
+  // Matches both the legacy tags (prompts.js) and the generic [FORM_CARD:<id>]
+  // tags emitted by an active form definition, so progress tracks either path.
+  const SECTION_PATTERNS = [
+    { id: 0, re: /\*\*\s*SECTION\s*0\b|lockbox\s*type|wholesale\s*standard|wholetail/i },
+    { id: 1, re: /\*\*\s*SECTION\s*1\b|\[CONTACT_CARD:|\[FORM_CARD:(contact_bank_project|contact_client_primary|contact_client_secondary|approval)\]/ },
+    { id: 2, re: /\*\*\s*SECTION\s*2\b|\[DATE_PICKER:|\bQuestion\s*2\.\d+|\b2\.\d+\b|processing\s*site/i },
+    { id: 3, re: /\*\*\s*SECTION\s*3\b|\[DEPOSIT_BANKING_CARD\]|\[EXCEPTION_HANDLING_CARD\]|\[DISCREPANCY_CARD\]|\[PAYEE_VERIFICATION_CARD\]|\[BACKUP_DESTRUCTION_CARD\]|\[MAIL_OUT_METHOD_CARD\]|\[MAILING_ADDRESS_CARD\]|\[WEB_PORTAL_ARCHIVE_CARD\]|\[IMAGE_EXPOSURE_CARD\]|\[WEB_PORTAL_ADMIN_CARD\]|\[FORM_CARD:(deposit_banking|exception_handling|discrepancy|payee_verification|backup_destruction|mail_out_method|mailing_address|web_portal_archive|image_exposure|web_portal_admin)\]|\b3\.\d+\b/ },
+    { id: 4, re: /\*\*\s*SECTION\s*4\b|\[EMAILED_REPORTS_CARD\]|\[SCHEDULED_REPORTS_CARD\]|\[FORM_CARD:(emailed_reports|scheduled_reports)\]|\b4\.\d+\b|emailed\s*reports|scheduled\s*reports/i },
+    { id: 5, re: /\*\*\s*SECTION\s*5\b|\[DATA_CAPTURE_CARD\]|\[FORM_CARD:data_capture\]|\b5\.\d+\b/ },
+    { id: 6, re: /\*\*\s*SECTION\s*6\b|\[SCANLINE_DEFINITION_CARD\]|\[FORM_CARD:scanline_definition\]|\b6\.\d+\b/ },
+    { id: 7, re: /\*\*\s*SECTION\s*7\b|\b7\.\d+\b/ },
+  ];
+  let progressMax = -1;
+  function updateProgress(text) {
+    if (!text) return;
+    let highest = progressMax;
+    for (const p of SECTION_PATTERNS) {
+      if (p.re.test(text) && p.id > highest) highest = p.id;
+    }
+    if (highest === progressMax) return;
+    progressMax = highest;
+    document.querySelectorAll('.section-item').forEach(li => {
+      const id = parseInt(li.dataset.section, 10);
+      li.classList.remove('active', 'done');
+      if (id < progressMax) li.classList.add('done');
+      else if (id === progressMax) li.classList.add('active');
+    });
+  }
+  function resetProgress() {
+    progressMax = -1;
+    document.querySelectorAll('.section-item').forEach(li => li.classList.remove('active', 'done'));
+  }
+
+  /* ── Card edit / restore ── */
+  const savedCardHTML = new Map();
+
+  function finalizeCard(cardId, confirmedHtml, messageText) {
+    const card = document.getElementById(cardId);
+    savedCardHTML.set(cardId, card.innerHTML);
+    card.innerHTML = `<div class="card-submitted-row">${confirmedHtml}<button class="card-edit-btn" onclick="editCard('${cardId}')">✏ Edit</button></div>`;
+    document.getElementById('userInput').value = messageText;
+    sendMessage();
+  }
+
+  function editCard(cardId) {
+    const saved = savedCardHTML.get(cardId);
+    if (saved) document.getElementById(cardId).innerHTML = saved;
+  }
+
+  /* ── Helpers ── */
+  function ts() {
+    return new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+  }
+
+  function scrollBottom() {
+    const wrap = document.getElementById('chatWrap');
+    wrap.scrollTop = wrap.scrollHeight;
+  }
+
+  function setStatus(text, thinking = false) {
+    document.getElementById('statusText').textContent = text;
+    const dot = document.getElementById('statusDot');
+    dot.className = 'status-dot' + (thinking ? ' thinking' : '');
+  }
+
+  function showToast(msg, duration = 3000) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), duration);
+  }
+
+  // Live Azure OpenAI token counter (this session) shown in the header.
+  async function refreshUsage() {
+    try {
+      const r = await fetch('/api/usage');
+      if (!r.ok) return;
+      const u = await r.json();
+      const s = (u.session && u.session.total) || { total: 0, cached: 0 };
+      const badge = document.getElementById('tokenBadge');
+      if (badge) {
+        const cachedPct = s.total ? Math.round((s.cached / s.total) * 100) : 0;
+        const billable = Math.max(0, s.total - Math.round((s.cached || 0) * 0.5));
+        badge.textContent = '⚡ ' + s.total.toLocaleString() + ' tok' + (s.cached ? ` (${cachedPct}% cached)` : '');
+        const c = u.session.categories || {};
+        const g = u.grandTotal || { total: 0, cached: 0 };
+        badge.title =
+          `Azure OpenAI tokens — this session: ${s.total.toLocaleString()}\n` +
+          `  cached (billed ~50%): ${(s.cached || 0).toLocaleString()} (${cachedPct}%)\n` +
+          `  ≈ billable: ${billable.toLocaleString()}\n` +
+          `  chat: ${(c.chat && c.chat.total) || 0} · extract: ${(c.extract && c.extract.total) || 0} · generate: ${(c.generate && c.generate.total) || 0}\n` +
+          `Global (all sessions): ${g.total.toLocaleString()} total, ${(g.cached || 0).toLocaleString()} cached · model: ${u.deployment}`;
+      }
+    } catch (_) { /* ignore */ }
+  }
+
+  /* ── Shared validators (email, US phone, date, DDA, RT, state, ZIP) ── */
+  const US_STATES = new Set([
+    'AL','AK','AZ','AR','CA','CO','CT','DE','FL','GA','HI','ID','IL','IN','IA',
+    'KS','KY','LA','ME','MD','MA','MI','MN','MS','MO','MT','NE','NV','NH','NJ',
+    'NM','NY','NC','ND','OH','OK','OR','PA','RI','SC','SD','TN','TX','UT','VT',
+    'VA','WA','WV','WI','WY','DC','PR','VI','GU','AS','MP'
+  ]);
+  const US_STATE_NAMES = new Set([
+    'alabama','alaska','arizona','arkansas','california','colorado','connecticut','delaware',
+    'florida','georgia','hawaii','idaho','illinois','indiana','iowa','kansas','kentucky',
+    'louisiana','maine','maryland','massachusetts','michigan','minnesota','mississippi',
+    'missouri','montana','nebraska','nevada','new hampshire','new jersey','new mexico',
+    'new york','north carolina','north dakota','ohio','oklahoma','oregon','pennsylvania',
+    'rhode island','south carolina','south dakota','tennessee','texas','utah','vermont',
+    'virginia','washington','west virginia','wisconsin','wyoming','district of columbia',
+    'puerto rico','virgin islands','guam','american samoa','northern mariana islands'
+  ]);
+
+  function isValidEmail(v) {
+    if (!v) return false;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(v.trim());
+  }
+  function isValidUSPhone(v) {
+    if (!v) return false;
+    const digits = v.replace(/[^0-9]/g, '');
+    let core = digits;
+    if (core.length === 11 && core.startsWith('1')) core = core.slice(1);
+    if (core.length !== 10) return false;
+    if (core[0] === '0' || core[0] === '1') return false;
+    if (core[3] === '0' || core[3] === '1') return false;
+    return true;
+  }
+  function isValidDate(v, { noPast = false } = {}) {
+    if (!v) return false;
+    let yr, mo, dy;
+    let m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(v.trim());
+    if (m) { yr = +m[1]; mo = +m[2]; dy = +m[3]; }
+    else {
+      m = /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/.exec(v.trim());
+      if (!m) return false;
+      mo = +m[1]; dy = +m[2]; yr = +m[3];
+    }
+    const d = new Date(yr, mo - 1, dy);
+    if (d.getFullYear() !== yr || d.getMonth() !== mo - 1 || d.getDate() !== dy) return false;
+    if (noPast) {
+      const today = new Date(); today.setHours(0,0,0,0);
+      if (d < today) return false;
+    }
+    return true;
+  }
+  function isValidDDA(v) {
+    if (!v) return false;
+    const s = v.trim();
+    return /^[0-9]{1,20}$/.test(s);
+  }
+  function isValidRT(v) {
+    if (!v) return false;
+    return /^[0-9]{9}$/.test(v.trim());
+  }
+  function isValidUSState(v) {
+    if (!v) return false;
+    const s = v.trim();
+    if (s.length === 2) return US_STATES.has(s.toUpperCase());
+    return US_STATE_NAMES.has(s.toLowerCase());
+  }
+  function isValidUSZip(v) {
+    if (!v) return false;
+    return /^[0-9]{5}(-[0-9]{4})?$/.test(v.trim());
+  }
+
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 140) + 'px';
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMessage();
+    }
+  }
+
+  /* ── Message rendering ── */
+  function appendMessage(role, content, withCursor = false) {
+    const container = document.getElementById('messages');
+
+    const wrap = document.createElement('div');
+    wrap.className = `msg ${role}`;
+
+    const avatar = document.createElement('div');
+    avatar.className = 'avatar';
+    avatar.textContent = role === 'bot' ? '🤖' : '👤';
+
+    const col = document.createElement('div');
+    col.style.display = 'flex';
+    col.style.flexDirection = 'column';
+    col.style.maxWidth = '72%';
+
+    const bubble = document.createElement('div');
+    bubble.className = 'bubble' + (withCursor ? ' cursor' : '');
+
+    if (role === 'bot') {
+      if (content === '__thinking__') {
+        bubble.innerHTML = '<div class="thinking-dots"><span></span><span></span><span></span></div>';
+      } else {
+        bubble.innerHTML = marked.parse(content);
+      }
+    } else {
+      bubble.textContent = content;
+    }
+
+    const time = document.createElement('div');
+    time.className = 'msg-time';
+    time.textContent = ts();
+
+    col.appendChild(bubble);
+    col.appendChild(time);
+
+    if (role === 'user') {
+      wrap.appendChild(col);
+      wrap.appendChild(avatar);
+    } else {
+      wrap.appendChild(avatar);
+      wrap.appendChild(col);
+    }
+
+    container.appendChild(wrap);
+    scrollBottom();
+    return bubble;
+  }
+
+  /* ── Contact card definitions ── */
+  const CONTACT_CARDS = {
+    bankProject: {
+      label: 'Bank Project Contact',
+      icon: '🏦',
+      optional: false,
+      fields: [
+        { key: 'name',     label: 'Name',      required: true,  type: 'text',  placeholder: 'Full name' },
+        { key: 'location', label: 'Location',                   type: 'text',  placeholder: 'City, State' },
+        { key: 'phone',    label: 'Phone',                      type: 'tel',   placeholder: 'Phone number' },
+        { key: 'email',    label: 'Email',                      type: 'email', placeholder: 'Email address' },
+        { key: 'jobTitle', label: 'Job Title',                  type: 'text',  placeholder: 'Title / role' },
+      ],
+    },
+    clientPrimary: {
+      label: 'Client Primary Contact',
+      icon: '👤',
+      optional: false,
+      fields: [
+        { key: 'name',     label: 'Name',     required: true,  type: 'text',  placeholder: 'Full name' },
+        { key: 'location', label: 'Location',                  type: 'text',  placeholder: 'City, State' },
+        { key: 'phone',    label: 'Phone',                     type: 'tel',   placeholder: 'Phone number' },
+        { key: 'email',    label: 'Email',                     type: 'email', placeholder: 'Email address' },
+      ],
+    },
+    clientSecondary: {
+      label: 'Client Secondary Contact',
+      icon: '👥',
+      optional: true,
+      fields: [
+        { key: 'name',     label: 'Name',     type: 'text',  placeholder: 'Full name' },
+        { key: 'location', label: 'Location', type: 'text',  placeholder: 'City, State' },
+        { key: 'phone',    label: 'Phone',    type: 'tel',   placeholder: 'Phone number' },
+        { key: 'email',    label: 'Email',    type: 'email', placeholder: 'Email address' },
+      ],
+    },
+    approval: {
+      label: 'Bank Questionnaire Approval',
+      icon: '✅',
+      optional: false,
+      fields: [
+        { key: 'name',      label: 'Name (Printed)', required: true,  type: 'text', placeholder: 'Printed name' },
+        { key: 'title',     label: 'Title',                           type: 'text', placeholder: 'Title / role' },
+        { key: 'signature', label: 'Signature',     required: true,  type: 'text', placeholder: 'Signature' },
+      ],
+    },
+  };
+
+  function makeContactCard(id) {
+    const cfg = CONTACT_CARDS[id];
+    const fieldsHtml = cfg.fields.map(f => `
+      <div class="contact-field">
+        <label>${f.label}${f.required ? ' <span class="contact-req">*</span>' : ''}</label>
+        <input type="${f.type}" id="${id}_${f.key}" placeholder="${f.placeholder}" />
+      </div>`).join('');
+    const skipBtn = cfg.optional
+      ? `<button class="contact-card-skip-btn" onclick="submitContactCard('${id}', true)">Skip (optional)</button>`
+      : '';
+    return `<div class="contact-card" id="${id}Card">
+      <div class="contact-card-header">
+        <span>${cfg.icon}</span>
+        <span class="contact-card-title">${cfg.label}</span>
+      </div>
+      <div class="contact-card-body">${fieldsHtml}</div>
+      <div style="display:flex;gap:8px;">
+        <button class="contact-card-btn" onclick="submitContactCard('${id}', false)" style="flex:1">Submit</button>
+        ${skipBtn}
+      </div>
+    </div>`;
+  }
+
+  function submitContactCard(id, skip) {
+    const cfg = CONTACT_CARDS[id];
+    const card = document.getElementById(`${id}Card`);
+
+    if (skip) {
+      finalizeCard(`${id}Card`, `<div class="contact-card-submitted">— ${cfg.label} skipped (optional)</div>`, `No ${cfg.label} — skipping this section.`);
+      return;
+    }
+
+    const values = {};
+    for (const f of cfg.fields) {
+      values[f.key] = document.getElementById(`${id}_${f.key}`).value.trim();
+    }
+
+    const req = cfg.fields.find(f => f.required);
+    if (req && !values[req.key]) {
+      showToast(`${req.label} is required`);
+      return;
+    }
+
+    for (const f of cfg.fields) {
+      const v = values[f.key];
+      if (!v) continue;
+      if (f.type === 'email' && !isValidEmail(v)) {
+        showToast(`${f.label}: please enter a valid email (e.g., name@company.com)`); return;
+      }
+      if (f.type === 'tel' && !isValidUSPhone(v)) {
+        showToast(`${f.label}: please enter a valid US phone number (10 digits)`); return;
+      }
+    }
+
+    const parts = cfg.fields
+      .filter(f => values[f.key])
+      .map(f => `${f.label}: ${values[f.key]}`);
+
+    const primaryVal = values[cfg.fields[0].key] || '(not provided)';
+    finalizeCard(`${id}Card`, `<div class="contact-card-submitted">✓ ${cfg.label} submitted — ${primaryVal}</div>`, `${cfg.label} — ${parts.join(', ')}`);
+  }
+
+  function injectCards(html) {
+    const markers = {
+      'bank_project':     'bankProject',
+      'client_primary':   'clientPrimary',
+      'client_secondary': 'clientSecondary',
+      'approval':         'approval',
+    };
+    for (const [marker, id] of Object.entries(markers)) {
+      html = html.replace(new RegExp(`\\[CONTACT_CARD:${marker}\\]`, 'g'), makeContactCard(id));
+    }
+    return html;
+  }
+
+  /* ── Date picker ── */
+  function makeDatePicker(id) {
+    const today = new Date().toISOString().split('T')[0];
+    return `<div class="date-picker-card" id="${id}_card">
+      <div class="date-picker-header">
+        <span>📅</span>
+        <span class="date-picker-title">Select Go-Live Date</span>
+      </div>
+      <div class="date-picker-body">
+        <input type="date" id="${id}_input" min="${today}" />
+      </div>
+      <button class="date-picker-btn" onclick="submitDatePicker('${id}')">Confirm Date</button>
+    </div>`;
+  }
+
+  function submitDatePicker(id) {
+    const input = document.getElementById(`${id}_input`);
+    if (!input.value) { showToast('Please select a date'); return; }
+    if (!isValidDate(input.value, { noPast: true })) {
+      showToast('Please select a valid date that is not in the past'); return;
+    }
+    const [yr, mo, dy] = input.value.split('-').map(Number);
+    const formatted = new Date(yr, mo - 1, dy).toLocaleDateString('en-US', {
+      year: 'numeric', month: 'long', day: 'numeric'
+    });
+    finalizeCard(`${id}_card`, `<div class="date-picker-submitted">✓ Go-Live Date: ${formatted}</div>`, `Requested Go-Live Date: ${formatted}`);
+  }
+
+  function injectDatePickers(html) {
+    return html.replace(/\[DATE_PICKER:([^\]]+)\]/g, (_, id) => makeDatePicker(id));
+  }
+
+  /* ── Deposit banking card ── */
+  function makeDepositBankingCard() {
+    return `<div class="deposit-card" id="depositBankingCard">
+      <div class="deposit-card-header">
+        <span>🏦</span>
+        <span class="deposit-card-title">Deposit &amp; Billing Banking Information</span>
+      </div>
+
+      <div class="deposit-card-body full">
+        <div class="deposit-field">
+          <label>Deposit Bank Name <span class="contact-req">*</span></label>
+          <input type="text" id="dep_bankName" placeholder="Bank name" />
+        </div>
+      </div>
+
+      <div class="deposit-card-section">Deposit Account</div>
+      <div class="deposit-card-body">
+        <div class="deposit-field">
+          <label>DDA # <span class="contact-req">*</span></label>
+          <input type="text" id="dep_depositDDA" placeholder="Deposit account number" />
+        </div>
+        <div class="deposit-field">
+          <label>Routing # (RT) <span class="contact-req">*</span></label>
+          <input type="text" id="dep_depositRT" placeholder="9-digit routing number" maxlength="9" />
+        </div>
+      </div>
+
+      <div class="deposit-card-section">Billing Account</div>
+      <div class="deposit-card-body">
+        <div class="deposit-field">
+          <label>DDA #</label>
+          <input type="text" id="dep_billingDDA" placeholder="Billing account number" />
+        </div>
+        <div class="deposit-field">
+          <label>Routing # (RT)</label>
+          <input type="text" id="dep_billingRT" placeholder="9-digit routing number" maxlength="9" />
+        </div>
+      </div>
+
+      <button class="deposit-card-btn" onclick="submitDepositBankingCard()">Submit Banking Information</button>
+    </div>`;
+  }
+
+  function submitDepositBankingCard() {
+    const bankName   = document.getElementById('dep_bankName').value.trim();
+    const depositDDA = document.getElementById('dep_depositDDA').value.trim();
+    const depositRT  = document.getElementById('dep_depositRT').value.trim();
+    const billingDDA = document.getElementById('dep_billingDDA').value.trim();
+    const billingRT  = document.getElementById('dep_billingRT').value.trim();
+
+    if (!bankName)   { showToast('Deposit Bank Name is required'); return; }
+    if (!depositDDA) { showToast('Deposit DDA # is required'); return; }
+    if (!isValidDDA(depositDDA)) { showToast('Deposit DDA # must be numeric and no more than 20 digits'); return; }
+    if (!depositRT)  { showToast('Deposit Routing # is required'); return; }
+    if (!isValidRT(depositRT))  { showToast('Deposit Routing # must be exactly 9 digits'); return; }
+    if (billingDDA && !isValidDDA(billingDDA)) { showToast('Billing DDA # must be numeric and no more than 20 digits'); return; }
+    if (billingRT  && !isValidRT(billingRT))  { showToast('Billing Routing # must be exactly 9 digits'); return; }
+
+    const parts = [
+      `Deposit Bank Name: ${bankName}`,
+      `Deposit DDA #: ${depositDDA}`,
+      `Deposit Routing # (RT): ${depositRT}`,
+    ];
+    if (billingDDA) parts.push(`Billing DDA #: ${billingDDA}`);
+    if (billingRT)  parts.push(`Billing Routing # (RT): ${billingRT}`);
+    if (!billingDDA && !billingRT) parts.push('Billing Account: same as deposit');
+
+    finalizeCard('depositBankingCard', `<div class="deposit-card-submitted">✓ Banking information submitted — ${bankName}</div>`, parts.join(', '));
+  }
+
+  function injectDepositBankingCard(html) {
+    return html.replace(/\[DEPOSIT_BANKING_CARD\]/g, makeDepositBankingCard());
+  }
+
+  /* ── Exception handling card ── */
+  const EXCEPTION_TYPES = [
+    'Blank Payee',
+    'Blank Legal Line',
+    'Third Party Checks',
+    'Missing Signature',
+    'Post Dated Checks',
+    'Stale Dated Checks',
+    '"Paid in Full" Items',
+    'Foreign Checks',
+  ];
+
+  function makeExceptionHandlingCard() {
+    const rows = EXCEPTION_TYPES.map((name, i) => `
+      <div class="exception-row" id="exc_row_${i}">
+        <span class="exception-row-name">${name}</span>
+        <div class="exception-row-btns">
+          <button class="exc-btn accept" id="exc_accept_${i}" onclick="selectException(${i},'accept')">Accept &amp; Deposit</button>
+          <button class="exc-btn return" id="exc_return_${i}" onclick="selectException(${i},'return')">Return Unprocessed</button>
+        </div>
+      </div>`).join('');
+
+    return `<div class="exception-card" id="exceptionHandlingCard">
+      <div class="exception-card-header">
+        <span>⚠️</span>
+        <span class="exception-card-title">Exception Handling Rules</span>
+      </div>
+      ${rows}
+      <button class="exception-card-btn" onclick="submitExceptionHandlingCard()">Submit Exception Rules</button>
+    </div>`;
+  }
+
+  function selectException(i, choice) {
+    const accept = document.getElementById(`exc_accept_${i}`);
+    const ret    = document.getElementById(`exc_return_${i}`);
+    accept.classList.toggle('active', choice === 'accept');
+    ret.classList.toggle('active',    choice === 'return');
+    accept.dataset.selected = choice === 'accept' ? '1' : '';
+    ret.dataset.selected    = choice === 'return' ? '1' : '';
+  }
+
+  function submitExceptionHandlingCard() {
+    const results = [];
+    for (let i = 0; i < EXCEPTION_TYPES.length; i++) {
+      const accept = document.getElementById(`exc_accept_${i}`);
+      const ret    = document.getElementById(`exc_return_${i}`);
+      if (accept.dataset.selected === '1') {
+        results.push(`${EXCEPTION_TYPES[i]}: Accept & Deposit`);
+      } else if (ret.dataset.selected === '1') {
+        results.push(`${EXCEPTION_TYPES[i]}: Return Unprocessed`);
+      } else {
+        showToast(`Please select a rule for: ${EXCEPTION_TYPES[i]}`);
+        return;
+      }
+    }
+    finalizeCard('exceptionHandlingCard', `<div class="exception-card-submitted">✓ Exception rules submitted for all 8 types</div>`, 'Exception Handling Rules — ' + results.join('; '));
+  }
+
+  function injectExceptionHandlingCard(html) {
+    return html.replace(/\[EXCEPTION_HANDLING_CARD\]/g, makeExceptionHandlingCard());
+  }
+
+  /* ── Discrepancy handling card ── */
+  function makeDiscrepancyCard() {
+    return `<div class="discrepancy-card" id="discrepancyCard">
+      <div class="discrepancy-card-header">
+        <span>⚖️</span>
+        <span class="discrepancy-card-title">Discrepancy Handling</span>
+      </div>
+      <div class="discrepancy-question">What should happen when the Legal Line amount differs from the Courtesy Box amount?</div>
+      <div class="discrepancy-btns">
+        <button class="disc-btn legal" id="disc_legal" onclick="selectDiscrepancy('legal')">Use Legal Amount</button>
+        <button class="disc-btn return" id="disc_return" onclick="selectDiscrepancy('return')">Return Unprocessed</button>
+      </div>
+    </div>`;
+  }
+
+  function selectDiscrepancy(choice) {
+    document.getElementById('disc_legal').classList.toggle('active', choice === 'legal');
+    document.getElementById('disc_return').classList.toggle('active', choice === 'return');
+    const label = choice === 'legal' ? 'Use Legal Amount' : 'Return Unprocessed';
+    finalizeCard('discrepancyCard', `<div class="discrepancy-card-submitted">✓ Discrepancy Handling: ${label}</div>`, `Discrepancy Handling: ${label}`);
+  }
+
+  function injectDiscrepancyCard(html) {
+    return html.replace(/\[DISCREPANCY_CARD\]/g, makeDiscrepancyCard());
+  }
+
+  /* ── Backup destruction card ── */
+  const BACKUP_OPTIONS = [
+    { id: 'temp_hold',    label: 'Temp Hold & Destroy' },
+    { id: 'return_daily', label: 'Return all backup in daily package' },
+  ];
+
+  let backupSelected = null;
+
+  function makeBackupDestructionCard() {
+    const rows = BACKUP_OPTIONS.map(opt => `
+      <div class="backup-option" id="backup_opt_${opt.id}" onclick="selectBackupOption('${opt.id}')">
+        <div class="backup-checkbox">
+          <svg class="backup-checkbox-tick" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="backup-option-label">${opt.label}</span>
+      </div>`).join('');
+
+    return `<div class="backup-card" id="backupDestructionCard">
+      <div class="backup-card-header">
+        <span>🗑️</span>
+        <span class="backup-card-title">Backup Destruction</span>
+      </div>
+      ${rows}
+      <button class="backup-card-btn" onclick="submitBackupDestructionCard()">Confirm Selection</button>
+    </div>`;
+  }
+
+  function selectBackupOption(id) {
+    backupSelected = id;
+    BACKUP_OPTIONS.forEach(opt => {
+      document.getElementById(`backup_opt_${opt.id}`).classList.toggle('selected', opt.id === id);
+    });
+  }
+
+  function submitBackupDestructionCard() {
+    if (!backupSelected) { showToast('Please select a backup destruction option.'); return; }
+    const label = BACKUP_OPTIONS.find(o => o.id === backupSelected).label;
+    finalizeCard('backupDestructionCard', `<div class="backup-card-submitted">✓ Backup Destruction: ${label}</div>`, `Backup Destruction: ${label}`);
+  }
+
+  function injectBackupDestructionCard(html) {
+    return html.replace(/\[BACKUP_DESTRUCTION_CARD\]/g, makeBackupDestructionCard());
+  }
+
+  /* ── Emailed reports card (Section 4.1) ── */
+  const EMREP_OPTIONS = [
+    { id: 'noActivityReport',        label: 'No Activity Report' },
+    { id: 'batchSummaryByMode',      label: 'Batch Summary by Batch Mode' },
+    { id: 'batchSummaryByNumber',    label: 'Batch Summary by Batch Number' },
+    { id: 'batchSummaryWithSortTypes', label: 'Batch Summary with Sort Types' },
+  ];
+  const emrepSelected = new Set();
+
+  function makeEmailedReportsCard() {
+    const rows = EMREP_OPTIONS.map(opt => `
+      <div class="backup-option" id="emrep_opt_${opt.id}" onclick="toggleEmailedReport('${opt.id}')">
+        <div class="backup-checkbox">
+          <svg class="backup-checkbox-tick" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="backup-option-label">${opt.label}</span>
+      </div>`).join('');
+
+    return `<div class="backup-card" id="emailedReportsCard">
+      <div class="backup-card-header">
+        <span>📧</span>
+        <span class="backup-card-title">Emailed Reports</span>
+      </div>
+      ${rows}
+      <label class="emrep-email-label" for="emrep_email">Email address for these reports</label>
+      <input type="email" class="emrep-email-input" id="emrep_email" placeholder="name@example.com" autocomplete="email">
+      <button class="backup-card-btn" onclick="submitEmailedReportsCard()">Confirm Selection</button>
+    </div>`;
+  }
+
+  function toggleEmailedReport(id) {
+    if (emrepSelected.has(id)) emrepSelected.delete(id);
+    else emrepSelected.add(id);
+    document.getElementById(`emrep_opt_${id}`).classList.toggle('selected', emrepSelected.has(id));
+  }
+
+  function submitEmailedReportsCard() {
+    if (emrepSelected.size === 0) { showToast('Please select at least one report.'); return; }
+    const email = (document.getElementById('emrep_email').value || '').trim();
+    if (!isValidEmail(email)) { showToast('Please enter a valid email address.'); return; }
+    const labels = EMREP_OPTIONS.filter(o => emrepSelected.has(o.id)).map(o => o.label);
+    const summary = `Emailed Reports: ${labels.join(', ')} → ${email}`;
+    finalizeCard('emailedReportsCard', `<div class="backup-card-submitted">✓ ${summary}</div>`, summary);
+  }
+
+  function injectEmailedReportsCard(html) {
+    return html.replace(/\[EMAILED_REPORTS_CARD\]/g, makeEmailedReportsCard());
+  }
+
+  /* ── Scheduled reports card (Section 4.2) ── */
+  const SCHREP_OPTIONS = [
+    { id: 'batchSummaryByMode',              label: 'Batch Summary by Batch Mode' },
+    { id: 'batchSummaryByNumber',            label: 'Batch Summary by Batch Number' },
+    { id: 'batchSummaryByModeWithSortTypes', label: 'Batch Summary by Batch Mode with Sort Types' },
+    { id: 'batchImageDetail',                label: 'Batch Image Detail' },
+    { id: 'checkImageDetail',                label: 'Check Image Detail' },
+    { id: 'depositSummaryDaily',             label: 'Deposit Summary (Daily)' },
+    { id: 'depositSummaryMonthly',           label: 'Deposit Summary (Monthly)' },
+    { id: 'depositSummaryMultiple',          label: 'Deposit Summary (Multiple Lockboxes)' },
+  ];
+  const schrepSelected = new Set();
+
+  function makeScheduledReportsCard() {
+    const rows = SCHREP_OPTIONS.map(opt => `
+      <div class="backup-option" id="schrep_opt_${opt.id}" onclick="toggleScheduledReport('${opt.id}')">
+        <div class="backup-checkbox">
+          <svg class="backup-checkbox-tick" viewBox="0 0 10 10"><polyline points="1.5,5 4,7.5 8.5,2" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <span class="backup-option-label">${opt.label}</span>
+      </div>`).join('');
+
+    return `<div class="backup-card" id="scheduledReportsCard">
+      <div class="backup-card-header">
+        <span>📅</span>
+        <span class="backup-card-title">Scheduled Reports</span>
+      </div>
+      ${rows}
+      <div id="schrep_consolidated_wrap" style="display:none;">
+        <label class="emrep-email-label" for="schrep_consolidated">Other lockbox numbers for consolidated report</label>
+        <input type="text" class="emrep-email-input" id="schrep_consolidated" placeholder="e.g., 12345, 67890">
+      </div>
+      <button class="backup-card-btn" onclick="submitScheduledReportsCard()">Confirm Selection</button>
+    </div>`;
+  }
+
+  function toggleScheduledReport(id) {
+    if (schrepSelected.has(id)) schrepSelected.delete(id);
+    else schrepSelected.add(id);
+    document.getElementById(`schrep_opt_${id}`).classList.toggle('selected', schrepSelected.has(id));
+    const wrap = document.getElementById('schrep_consolidated_wrap');
+    if (wrap) wrap.style.display = schrepSelected.has('depositSummaryMultiple') ? 'block' : 'none';
+  }
+
+  function submitScheduledReportsCard() {
+    if (schrepSelected.size === 0) { showToast('Please select at least one report.'); return; }
+    const labels = SCHREP_OPTIONS.filter(o => schrepSelected.has(o.id)).map(o => o.label);
+    let summary = `Scheduled Reports: ${labels.join(', ')}`;
+    if (schrepSelected.has('depositSummaryMultiple')) {
+      const lockboxes = (document.getElementById('schrep_consolidated').value || '').trim();
+      if (!lockboxes) { showToast('Please enter the other lockbox numbers for the consolidated report.'); return; }
+      summary += ` | Consolidated lockboxes: ${lockboxes}`;
+    }
+    finalizeCard('scheduledReportsCard', `<div class="backup-card-submitted">✓ ${summary}</div>`, summary);
+  }
+
+  function injectScheduledReportsCard(html) {
+    return html.replace(/\[SCHEDULED_REPORTS_CARD\]/g, makeScheduledReportsCard());
+  }
+
+  /* ── Mail out method card ── */
+  let mailoutMethod  = null;
+  let mailoutSpeed   = null;
+  let mailoutCarrier = null;
+
+  function makeMailOutMethodCard() {
+    return `<div class="mailout-card" id="mailOutMethodCard">
+      <div class="mailout-card-header">
+        <span>✉️</span>
+        <span class="mailout-card-title">Mail Out Method</span>
+      </div>
+      <div class="mailout-method-row">
+        <div class="mailout-method-btn" id="mailout_first_class" onclick="selectMailOutMethod('first_class')">
+          📬 First Class
+        </div>
+        <div class="mailout-method-btn" id="mailout_express" onclick="selectMailOutMethod('express')">
+          🚀 Express Mail
+        </div>
+      </div>
+      <div class="mailout-express-options" id="mailoutExpressOptions">
+        <div class="mailout-express-label">Delivery Speed</div>
+        <div class="mailout-speed-row">
+          <div class="mailout-speed-btn" id="mailout_overnight" onclick="selectMailOutSpeed('overnight')">Overnight</div>
+          <div class="mailout-speed-btn" id="mailout_two_day"   onclick="selectMailOutSpeed('two_day')">Two Day</div>
+        </div>
+        <div class="mailout-express-label">Carrier</div>
+        <div class="mailout-carrier-row">
+          <div class="mailout-carrier-btn" id="mailout_fedex" onclick="selectMailOutCarrier('fedex')">FedEx</div>
+          <div class="mailout-carrier-btn" id="mailout_ups"   onclick="selectMailOutCarrier('ups')">UPS</div>
+        </div>
+        <div class="mailout-account-field">
+          <label>Billing Account # <span class="contact-req">*</span></label>
+          <input type="text" id="mailout_account" placeholder="Enter carrier billing account number" />
+        </div>
+      </div>
+      <button class="mailout-card-btn" onclick="submitMailOutMethodCard()">Confirm Selection</button>
+    </div>`;
+  }
+
+  function selectMailOutMethod(method) {
+    mailoutMethod = method;
+    document.getElementById('mailout_first_class').classList.toggle('selected', method === 'first_class');
+    document.getElementById('mailout_express').classList.toggle('selected', method === 'express');
+    const opts = document.getElementById('mailoutExpressOptions');
+    if (method === 'express') {
+      opts.classList.add('visible');
+    } else {
+      opts.classList.remove('visible');
+      mailoutSpeed = null;
+      mailoutCarrier = null;
+      ['mailout_overnight', 'mailout_two_day', 'mailout_fedex', 'mailout_ups'].forEach(id => {
+        document.getElementById(id).classList.remove('selected');
+      });
+    }
+  }
+
+  function selectMailOutSpeed(speed) {
+    mailoutSpeed = speed;
+    document.getElementById('mailout_overnight').classList.toggle('selected', speed === 'overnight');
+    document.getElementById('mailout_two_day').classList.toggle('selected', speed === 'two_day');
+  }
+
+  function selectMailOutCarrier(carrier) {
+    mailoutCarrier = carrier;
+    document.getElementById('mailout_fedex').classList.toggle('selected', carrier === 'fedex');
+    document.getElementById('mailout_ups').classList.toggle('selected', carrier === 'ups');
+  }
+
+  function submitMailOutMethodCard() {
+    if (!mailoutMethod) { showToast('Please select a mail out method.'); return; }
+    if (mailoutMethod === 'express') {
+      if (!mailoutSpeed)   { showToast('Please select a delivery speed.'); return; }
+      if (!mailoutCarrier) { showToast('Please select a carrier.'); return; }
+      const account = document.getElementById('mailout_account').value.trim();
+      if (!account) { showToast('Please enter the billing account number.'); return; }
+      const speedLabel   = mailoutSpeed === 'overnight' ? 'Overnight' : 'Two Day';
+      const carrierLabel = mailoutCarrier === 'fedex' ? 'FedEx' : 'UPS';
+      const summary = `Express Mail — ${speedLabel}, ${carrierLabel}, Account: ${account}`;
+      finalizeCard('mailOutMethodCard', `<div class="mailout-card-submitted">✓ Mail Out Method: ${summary}</div>`, `Mail Out Method: ${summary}`);
+    } else {
+      finalizeCard('mailOutMethodCard', `<div class="mailout-card-submitted">✓ Mail Out Method: First Class</div>`, 'Mail Out Method: First Class');
+    }
+  }
+
+  function injectMailOutMethodCard(html) {
+    return html.replace(/\[MAIL_OUT_METHOD_CARD\]/g, makeMailOutMethodCard());
+  }
+
+  /* ── Data capture fields card ── */
+  const DATACAP_FIELDS = [
+    'Remitter/Payer Name',
+    'Customer Number',
+    'Invoice Number',
+    'Invoice Amount',
+    'Gross Invoice Amt',
+    'Discount Amt',
+    'Net Invoice Amt',
+  ];
+
+  let datacapCustomCount = 0;
+
+  function makeDataCaptureCard() {
+    datacapCustomCount = 0;
+    const rows = DATACAP_FIELDS.map((name, i) => `
+      <div class="datacap-row" id="dcrow_${i}">
+        <input type="checkbox" id="dc_chk_${i}" onchange="toggleDatacapRow(${i})" />
+        <span class="datacap-row-name">${name}</span>
+        <input type="text" id="dc_len_${i}"  placeholder="e.g. 30"   disabled />
+        <input type="text" id="dc_type_${i}" placeholder="N or AN"   disabled />
+        <input type="text" id="dc_val_${i}"  placeholder="Validation" disabled />
+      </div>`).join('');
+
+    return `<div class="datacap-card" id="dataCaptureCard">
+      <div class="datacap-card-header">
+        <span>📋</span>
+        <span class="datacap-card-title">Data Capture Fields</span>
+      </div>
+      <div class="datacap-col-headers">
+        <span></span>
+        <span>Field Name</span>
+        <span>Length</span>
+        <span>Field Type</span>
+        <span>Validation</span>
+      </div>
+      ${rows}
+      <div class="datacap-custom-section">
+        <span>Custom Fields</span>
+        <button class="datacap-add-btn" onclick="addDatacapCustomRow()">+ Add Field</button>
+      </div>
+      <div id="datacapCustomRows"></div>
+      <button class="datacap-card-btn" onclick="submitDataCaptureCard()">Submit Data Capture Fields</button>
+    </div>`;
+  }
+
+  function toggleDatacapRow(i) {
+    const enabled = document.getElementById(`dc_chk_${i}`).checked;
+    ['len', 'type', 'val'].forEach(f => {
+      const el = document.getElementById(`dc_${f}_${i}`);
+      el.disabled = !enabled;
+      if (!enabled) el.value = '';
+    });
+  }
+
+  function addDatacapCustomRow() {
+    const idx = 'c' + datacapCustomCount++;
+    const div = document.createElement('div');
+    div.className = 'datacap-row';
+    div.id = `dcrow_${idx}`;
+    div.innerHTML = `
+      <input type="checkbox" id="dc_chk_${idx}" checked onchange="toggleDatacapRow('${idx}')" />
+      <input type="text" id="dc_name_${idx}" placeholder="Field name" style="font-size:12px;border:1px solid #cbd5e1;border-radius:6px;padding:5px 8px;font-family:inherit;outline:none;width:100%;" />
+      <input type="text" id="dc_len_${idx}"  placeholder="e.g. 30"   />
+      <input type="text" id="dc_type_${idx}" placeholder="N or AN"   />
+      <input type="text" id="dc_val_${idx}"  placeholder="Validation" />`;
+    document.getElementById('datacapCustomRows').appendChild(div);
+  }
+
+  function submitDataCaptureCard() {
+    const enabled = [];
+
+    for (let i = 0; i < DATACAP_FIELDS.length; i++) {
+      if (!document.getElementById(`dc_chk_${i}`).checked) continue;
+      const len  = document.getElementById(`dc_len_${i}`).value.trim();
+      const type = document.getElementById(`dc_type_${i}`).value.trim();
+      const val  = document.getElementById(`dc_val_${i}`).value.trim();
+      const parts = [DATACAP_FIELDS[i]];
+      if (len)  parts.push(`Length: ${len}`);
+      if (type) parts.push(`Type: ${type}`);
+      if (val)  parts.push(`Validation: ${val}`);
+      enabled.push(parts.join(', '));
+    }
+
+    for (let j = 0; j < datacapCustomCount; j++) {
+      const idx = 'c' + j;
+      const chk = document.getElementById(`dc_chk_${idx}`);
+      if (!chk || !chk.checked) continue;
+      const name = document.getElementById(`dc_name_${idx}`).value.trim();
+      if (!name) { showToast('Please enter a name for each custom field'); return; }
+      const len  = document.getElementById(`dc_len_${idx}`).value.trim();
+      const type = document.getElementById(`dc_type_${idx}`).value.trim();
+      const val  = document.getElementById(`dc_val_${idx}`).value.trim();
+      const parts = [name + ' (custom)'];
+      if (len)  parts.push(`Length: ${len}`);
+      if (type) parts.push(`Type: ${type}`);
+      if (val)  parts.push(`Validation: ${val}`);
+      enabled.push(parts.join(', '));
+    }
+
+    if (enabled.length === 0) { showToast('Please enable at least one field'); return; }
+
+    finalizeCard('dataCaptureCard', `<div class="datacap-card-submitted">✓ Data capture fields submitted — ${enabled.length} field(s) selected</div>`, 'Data Capture Fields — ' + enabled.join(' | '));
+  }
+
+  function injectDataCaptureCard(html) {
+    return html.replace(/\[DATA_CAPTURE_CARD\]/g, makeDataCaptureCard());
+  }
+
+  /* ── Scanline definition card ── */
+  let scanlineRowCount = 0;
+
+  function scanlineRowHtml(idx) {
+    return `<tr id="slrow_${idx}">
+      <td><input type="text" id="sl_name_${idx}"  placeholder="e.g. Account Number" /></td>
+      <td><input type="text" id="sl_start_${idx}" placeholder="1"  style="width:70px" /></td>
+      <td><input type="text" id="sl_end_${idx}"   placeholder="10" style="width:70px" /></td>
+      <td><input type="text" id="sl_len_${idx}"   placeholder="10" style="width:70px" /></td>
+      <td><input type="text" id="sl_type_${idx}"  placeholder="N or AN" style="width:80px" /></td>
+      <td><button class="scanline-del-btn" onclick="deleteScanlineRow('${idx}')" title="Remove row">✕</button></td>
+    </tr>`;
+  }
+
+  function makeScanlineCard() {
+    scanlineRowCount = 0;
+    const firstRow = scanlineRowHtml(scanlineRowCount++);
+    return `<div class="scanline-card" id="scanlineDefCard">
+      <div class="scanline-card-header">
+        <span>📐</span>
+        <span class="scanline-card-title">Scanline Definition</span>
+      </div>
+      <table class="scanline-table">
+        <thead>
+          <tr>
+            <th>Field Name</th>
+            <th>Digit Start</th>
+            <th>Digit End</th>
+            <th>Length</th>
+            <th>Type (N/AN)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="scanlineTbody">${firstRow}</tbody>
+      </table>
+      <button class="scanline-add-btn" onclick="addScanlineRow()">+ Add Field</button>
+      <button class="scanline-card-btn" onclick="submitScanlineCard()">Submit Scanline Definition</button>
+    </div>`;
+  }
+
+  function addScanlineRow() {
+    const tbody = document.getElementById('scanlineTbody');
+    if (!tbody) return;
+    const idx = scanlineRowCount++;
+    const tr = document.createElement('tr');
+    tr.id = `slrow_${idx}`;
+    tr.innerHTML = scanlineRowHtml(idx).replace(/^<tr[^>]*>/, '').replace(/<\/tr>$/, '');
+    tbody.insertAdjacentHTML('beforeend', scanlineRowHtml(idx));
+  }
+
+  function deleteScanlineRow(idx) {
+    const row = document.getElementById(`slrow_${idx}`);
+    if (row) row.remove();
+  }
+
+  function submitScanlineCard() {
+    const tbody = document.getElementById('scanlineTbody');
+    const rows = tbody ? tbody.querySelectorAll('tr') : [];
+    const results = [];
+
+    for (const row of rows) {
+      const id = row.id.replace('slrow_', '');
+      const name  = document.getElementById(`sl_name_${id}`)?.value.trim();
+      const start = document.getElementById(`sl_start_${id}`)?.value.trim();
+      const end   = document.getElementById(`sl_end_${id}`)?.value.trim();
+      const len   = document.getElementById(`sl_len_${id}`)?.value.trim();
+      const type  = document.getElementById(`sl_type_${id}`)?.value.trim();
+
+      if (!name && !start && !end && !len && !type) continue;
+      if (!name) { showToast('Field Name is required for each row'); return; }
+
+      const parts = [`Field: ${name}`];
+      if (start) parts.push(`Start: ${start}`);
+      if (end)   parts.push(`End: ${end}`);
+      if (len)   parts.push(`Length: ${len}`);
+      if (type)  parts.push(`Type: ${type}`);
+      results.push(parts.join(', '));
+    }
+
+    if (results.length === 0) { showToast('Please define at least one scanline field'); return; }
+
+    finalizeCard('scanlineDefCard', `<div class="scanline-card-submitted">✓ Scanline definition submitted — ${results.length} field(s) defined</div>`, 'Scanline Definition — ' + results.join(' | '));
+  }
+
+  function injectScanlineCard(html) {
+    return html.replace(/\[SCANLINE_DEFINITION_CARD\]/g, makeScanlineCard());
+  }
+
+  /* ── Payee verification card ── */
+  let payeeMode = null;
+  let payeeRowCount = 0;
+
+  function makePayeeVerificationCard() {
+    payeeMode = null;
+    payeeRowCount = 0;
+    return `<div class="payee-card" id="payeeVerificationCard">
+      <div class="payee-card-header">
+        <span>🏷️</span>
+        <span class="payee-card-title">Payee Verification</span>
+      </div>
+      <div class="payee-mode-btns">
+        <button class="payee-mode-btn" id="payeeBtn_all"    onclick="selectPayeeMode('all')">Accept All Payees</button>
+        <button class="payee-mode-btn" id="payeeBtn_listed" onclick="selectPayeeMode('listed')">Accept Only Listed Payees</button>
+      </div>
+      <div class="payee-list-section" id="payeeListSection">
+        <div class="payee-list-label">
+          <span>Payee Names</span>
+          <button class="payee-add-btn" onclick="addPayeeRow()">+ Add Payee</button>
+        </div>
+        <div id="payeeRows"></div>
+        <div class="payee-charge-note">Note: an additional charge applies for more than 10 payees.</div>
+      </div>
+      <button class="payee-card-btn" onclick="submitPayeeVerificationCard()">Confirm Payee Verification</button>
+    </div>`;
+  }
+
+  function selectPayeeMode(mode) {
+    payeeMode = mode;
+    document.getElementById('payeeBtn_all').classList.toggle('active', mode === 'all');
+    document.getElementById('payeeBtn_listed').classList.toggle('active', mode === 'listed');
+    const section = document.getElementById('payeeListSection');
+    if (mode === 'listed') {
+      section.classList.add('visible');
+      if (document.getElementById('payeeRows').children.length === 0) addPayeeRow();
+    } else {
+      section.classList.remove('visible');
+    }
+  }
+
+  function addPayeeRow() {
+    const idx = payeeRowCount++;
+    const div = document.createElement('div');
+    div.className = 'payee-input-row';
+    div.id = `payeeRow_${idx}`;
+    div.innerHTML = `
+      <input type="text" id="payee_${idx}" placeholder="Payee name" />
+      <button class="payee-del-btn" onclick="deletePayeeRow(${idx})" title="Remove">✕</button>`;
+    document.getElementById('payeeRows').appendChild(div);
+  }
+
+  function deletePayeeRow(idx) {
+    const row = document.getElementById(`payeeRow_${idx}`);
+    if (row) row.remove();
+  }
+
+  function submitPayeeVerificationCard() {
+    if (!payeeMode) { showToast('Please select a payee verification option.'); return; }
+
+    let message, summary;
+
+    if (payeeMode === 'all') {
+      summary = 'Accept All Payees';
+      message = 'Payee Verification: Accept all payees';
+    } else {
+      const rows = document.getElementById('payeeRows').querySelectorAll('input[type="text"]');
+      const names = Array.from(rows).map(i => i.value.trim()).filter(Boolean);
+      if (names.length === 0) { showToast('Please add at least one payee name.'); return; }
+      const extra = names.length > 10 ? ' (additional charge applies — >10 payees)' : '';
+      summary = `Accept Only Listed Payees (${names.length})`;
+      message = `Payee Verification: Accept only listed payees${extra} — ${names.join(', ')}`;
+    }
+
+    finalizeCard('payeeVerificationCard', `<div class="payee-card-submitted">✓ ${summary}</div>`, message);
+  }
+
+  function injectPayeeVerificationCard(html) {
+    return html.replace(/\[PAYEE_VERIFICATION_CARD\]/g, makePayeeVerificationCard());
+  }
+
+  /* ── Mailing address card ── */
+  function makeMailingAddressCard() {
+    return `<div class="mailing-card" id="mailingAddressCard">
+      <div class="mailing-card-header">
+        <span>📬</span>
+        <span class="mailing-card-title">Mailing Address</span>
+      </div>
+      <div class="mailing-card-body">
+        <div class="mailing-field">
+          <label>Company Name <span class="contact-req">*</span></label>
+          <input type="text" id="mail_company" placeholder="Company name" />
+        </div>
+        <div class="mailing-field">
+          <label>Attention To</label>
+          <input type="text" id="mail_attn" placeholder="Attention to" />
+        </div>
+        <div class="mailing-field">
+          <label>Address Line 1 <span class="contact-req">*</span></label>
+          <input type="text" id="mail_addr1" placeholder="Street address" />
+        </div>
+        <div class="mailing-field">
+          <label>Address Line 2</label>
+          <input type="text" id="mail_addr2" placeholder="Suite, floor, etc. (optional)" />
+        </div>
+        <div class="mailing-card-row">
+          <div class="mailing-field">
+            <label>City <span class="contact-req">*</span></label>
+            <input type="text" id="mail_city" placeholder="City" />
+          </div>
+          <div class="mailing-field">
+            <label>State</label>
+            <input type="text" id="mail_state" placeholder="State" maxlength="2" />
+          </div>
+        </div>
+        <div class="mailing-card-row">
+          <div class="mailing-field">
+            <label>ZIP Code</label>
+            <input type="text" id="mail_zip" placeholder="ZIP code" maxlength="10" />
+          </div>
+          <div class="mailing-field">
+            <label>Phone</label>
+            <input type="tel" id="mail_phone" placeholder="Phone number" />
+          </div>
+        </div>
+      </div>
+      <button class="mailing-card-btn" onclick="submitMailingAddressCard()">Submit Mailing Address</button>
+    </div>`;
+  }
+
+  function submitMailingAddressCard() {
+    const company = document.getElementById('mail_company').value.trim();
+    const attn    = document.getElementById('mail_attn').value.trim();
+    const addr1   = document.getElementById('mail_addr1').value.trim();
+    const addr2   = document.getElementById('mail_addr2').value.trim();
+    const city    = document.getElementById('mail_city').value.trim();
+    const state   = document.getElementById('mail_state').value.trim();
+    const zip     = document.getElementById('mail_zip').value.trim();
+    const phone   = document.getElementById('mail_phone').value.trim();
+
+    if (!company) { showToast('Company Name is required'); return; }
+    if (!addr1)   { showToast('Address Line 1 is required'); return; }
+    if (!city)    { showToast('City is required'); return; }
+    if (state && !isValidUSState(state)) { showToast('Please enter a valid US state (e.g., "CA" or "California")'); return; }
+    if (zip   && !isValidUSZip(zip))     { showToast('Please enter a valid US ZIP code (12345 or 12345-6789)'); return; }
+    if (phone && !isValidUSPhone(phone)) { showToast('Please enter a valid US phone number (10 digits)'); return; }
+
+    const parts = [`Company Name: ${company}`];
+    if (attn)  parts.push(`Attention To: ${attn}`);
+    parts.push(`Address Line 1: ${addr1}`);
+    if (addr2) parts.push(`Address Line 2: ${addr2}`);
+    if (city)  parts.push(`City: ${city}`);
+    if (state) parts.push(`State: ${state}`);
+    if (zip)   parts.push(`ZIP: ${zip}`);
+    if (phone) parts.push(`Phone: ${phone}`);
+
+    finalizeCard('mailingAddressCard', `<div class="mailing-card-submitted">✓ Mailing Address: ${company}${city ? ', ' + city : ''}</div>`, 'Mailing Address — ' + parts.join(', '));
+  }
+
+  function injectMailingAddressCard(html) {
+    return html.replace(/\[MAILING_ADDRESS_CARD\]/g, makeMailingAddressCard());
+  }
+
+  /* ── Web Portal Admin card (3.12) ── */
+  function makeWebPortalAdminCard() {
+    return `<div class="wpa-card" id="webPortalAdminCard">
+      <div class="wpa-card-header">
+        <span>🖥️</span>
+        <span class="wpa-card-title">Web Portal Administrators</span>
+      </div>
+      <div class="wpa-grid">
+        <div class="wpa-admin primary">
+          <div class="wpa-admin-hdr">
+            <span>Admin 1</span>
+            <span class="wpa-badge">Primary</span>
+          </div>
+          <div class="wpa-admin-body">
+            <div class="mailing-field">
+              <label>Name <span class="contact-req">*</span></label>
+              <input type="text" id="wpa1_name" placeholder="Full name" />
+            </div>
+            <div class="mailing-field">
+              <label>Email <span class="contact-req">*</span></label>
+              <input type="email" id="wpa1_email" placeholder="name@company.com" />
+            </div>
+          </div>
+        </div>
+        <div class="wpa-admin secondary">
+          <div class="wpa-admin-hdr">
+            <span>Admin 2</span>
+            <span class="wpa-badge">Secondary</span>
+          </div>
+          <div class="wpa-admin-body">
+            <div class="mailing-field">
+              <label>Name</label>
+              <input type="text" id="wpa2_name" placeholder="Full name" />
+            </div>
+            <div class="mailing-field">
+              <label>Email</label>
+              <input type="email" id="wpa2_email" placeholder="name@company.com" />
+            </div>
+          </div>
+        </div>
+      </div>
+      <button class="wpa-card-btn" onclick="submitWebPortalAdminCard()">Submit Administrators</button>
+    </div>`;
+  }
+
+  function submitWebPortalAdminCard() {
+    const name1  = document.getElementById('wpa1_name').value.trim();
+    const email1 = document.getElementById('wpa1_email').value.trim();
+    const name2  = document.getElementById('wpa2_name').value.trim();
+    const email2 = document.getElementById('wpa2_email').value.trim();
+
+    if (!name1)  { showToast('Admin 1 Name is required'); return; }
+    if (!email1) { showToast('Admin 1 Email is required'); return; }
+    if (!isValidEmail(email1)) { showToast('Admin 1 Email is not a valid email address'); return; }
+    if (email2 && !isValidEmail(email2)) { showToast('Admin 2 Email is not a valid email address'); return; }
+
+    const parts = [`Admin 1 — Name: ${name1}, Email: ${email1}`];
+    if (name2 || email2) parts.push(`Admin 2 — Name: ${name2 || '(none)'}, Email: ${email2 || '(none)'}`);
+
+    finalizeCard(
+      'webPortalAdminCard',
+      `<div class="wpa-submitted">✓ Web Portal Admins: ${name1}${name2 ? ' &amp; ' + name2 : ''}</div>`,
+      'Web Portal Administrators — ' + parts.join('; ')
+    );
+  }
+
+  function injectWebPortalAdminCard(html) {
+    return html.replace(/\[WEB_PORTAL_ADMIN_CARD\]/g, makeWebPortalAdminCard());
+  }
+
+  /* ── Web Portal Image Archive Card (3.10) ── */
+  function makeWebPortalArchiveCard() {
+    return `<div class="wpia-card" id="webPortalArchiveCard">
+      <div class="wpia-card-header">
+        <div class="wpia-card-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="3" width="20" height="14" rx="2"/><polyline points="8 21 12 17 16 21"/>
+            <path d="M9 8h6M9 12h4"/>
+          </svg>
+        </div>
+        <div>
+          <div class="wpia-card-title">Web Portal Image Archive</div>
+          <div class="wpia-card-subtitle">Configure archiving &amp; scanning preferences</div>
+        </div>
+      </div>
+
+      <!-- Yes / No -->
+      <div class="wpia-section-label">Archive Required?</div>
+      <div class="wpia-yn-row">
+        <button class="wpia-yn-btn" id="wpia_yes_btn" onclick="wpiaToggle(true)">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+          Yes
+        </button>
+        <button class="wpia-yn-btn" id="wpia_no_btn" onclick="wpiaToggle(false)">
+          <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"/></svg>
+          No
+        </button>
+      </div>
+
+      <!-- Details (visible only when Yes) -->
+      <div class="wpia-details" id="wpia_details">
+
+        <!-- Archive Items -->
+        <div class="wpia-section-label">Items to Archive</div>
+        <div class="wpia-archive-grid">
+
+          <!-- Checks — always required -->
+          <div class="wpia-check-item disabled-check" id="wpia_item_checks">
+            <input type="checkbox" id="wpia_chk_checks" checked disabled />
+            <div class="wpia-check-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/></svg>
+            </div>
+            <div class="wpia-check-label">
+              <strong>Checks</strong>
+              <span>Front &amp; back of all payment checks</span>
+            </div>
+            <span class="wpia-required-badge">Required</span>
+          </div>
+
+          <!-- Documents / Invoices / EOBs -->
+          <div class="wpia-check-item" id="wpia_item_docs" onclick="wpiaToggleItem(event, 'wpia_item_docs', 'wpia_chk_docs')">
+            <input type="checkbox" id="wpia_chk_docs" onchange="wpiaUpdateItem('wpia_item_docs', this)" onclick="event.stopPropagation()" />
+            <div class="wpia-check-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+            </div>
+            <div class="wpia-check-label">
+              <strong>Documents / Invoices / EOBs</strong>
+              <span>Remittance documents, invoices, explanation of benefits</span>
+            </div>
+          </div>
+
+          <!-- Correspondence -->
+          <div class="wpia-check-item" id="wpia_item_corr" onclick="wpiaToggleItem(event, 'wpia_item_corr', 'wpia_chk_corr')">
+            <input type="checkbox" id="wpia_chk_corr" onchange="wpiaUpdateItem('wpia_item_corr', this)" onclick="event.stopPropagation()" />
+            <div class="wpia-check-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+            </div>
+            <div class="wpia-check-label">
+              <strong>Correspondence</strong>
+              <span>Letters and other accompanying documents</span>
+            </div>
+          </div>
+
+          <!-- Envelopes -->
+          <div class="wpia-check-item" id="wpia_item_env" onclick="wpiaToggleItem(event, 'wpia_item_env', 'wpia_chk_env')">
+            <input type="checkbox" id="wpia_chk_env" onchange="wpiaUpdateItem('wpia_item_env', this)" onclick="event.stopPropagation()" />
+            <div class="wpia-check-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8 8.09"/><path d="M21 21L3 3"/></svg>
+            </div>
+            <div class="wpia-check-label">
+              <strong>Envelopes</strong>
+              <span>Mailing envelopes included with payments</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full Page Scanning -->
+        <div class="wpia-section-label">Scanning Options</div>
+        <div class="wpia-toggle-row" id="wpia_fp_row">
+          <div class="wpia-toggle-info">
+            <strong>Full Page Scanning Required?</strong>
+            <span>Scan entire page rather than cropped document area</span>
+          </div>
+          <label class="wpia-switch" onclick="wpiaFPToggle()">
+            <input type="checkbox" id="wpia_fullpage" />
+            <span class="wpia-slider"></span>
+          </label>
+        </div>
+
+      </div><!-- /wpia_details -->
+
+      <button class="wpia-submit-btn" id="wpia_submit_btn" onclick="submitWebPortalArchiveCard()">
+        <svg width="14" height="14" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg>
+        Confirm Selection
+      </button>
+    </div>`;
+  }
+
+  function wpiaToggle(isYes) {
+    const yesBtn = document.getElementById('wpia_yes_btn');
+    const noBtn  = document.getElementById('wpia_no_btn');
+    const details = document.getElementById('wpia_details');
+    if (!yesBtn) return;
+
+    yesBtn.classList.toggle('active-yes', isYes);
+    noBtn.classList.toggle('active-no', !isYes);
+    yesBtn.classList.toggle('active-no', false);
+    noBtn.classList.toggle('active-yes', false);
+
+    if (details) details.classList.toggle('visible', isYes);
+    // store choice on card element
+    document.getElementById('webPortalArchiveCard').dataset.choice = isYes ? 'yes' : 'no';
+  }
+
+  function wpiaToggleItem(event, itemId, chkId) {
+    // Clicking the div (not the checkbox itself) — manually toggle the checkbox
+    const chk = document.getElementById(chkId);
+    if (!chk || chk.disabled) return;
+    chk.checked = !chk.checked;
+    document.getElementById(itemId).classList.toggle('checked', chk.checked);
+  }
+
+  function wpiaUpdateItem(itemId, chk) {
+    // Called via onchange on the checkbox itself
+    document.getElementById(itemId).classList.toggle('checked', chk.checked);
+  }
+
+  function wpiaFPToggle() {
+    const row = document.getElementById('wpia_fp_row');
+    const chk = document.getElementById('wpia_fullpage');
+    if (row) row.classList.toggle('on', chk.checked);
+  }
+
+  function submitWebPortalArchiveCard() {
+    const card = document.getElementById('webPortalArchiveCard');
+    const choice = card ? card.dataset.choice : undefined;
+    if (!choice) { showToast('Please select Yes or No'); return; }
+
+    let summary = '';
+    let displayHtml = '';
+
+    if (choice === 'no') {
+      summary = 'Web Portal Image Archive: No';
+      displayHtml = `<div class="wpia-submitted">✓ Web Portal Image Archive: No</div>`;
+    } else {
+      const items = ['Checks (required)'];
+      if (document.getElementById('wpia_chk_docs')?.checked) items.push('Documents/Invoices/EOBs');
+      if (document.getElementById('wpia_chk_corr')?.checked) items.push('Correspondence');
+      if (document.getElementById('wpia_chk_env')?.checked)  items.push('Envelopes');
+      const fp = document.getElementById('wpia_fullpage')?.checked;
+      summary = `Web Portal Image Archive: Yes — Items: ${items.join(', ')}; Full Page Scanning: ${fp ? 'Yes' : 'No'}`;
+      const fpBadge = fp
+        ? `<span style="margin-left:8px;font-size:10px;font-weight:700;background:#dbeafe;color:#1d4ed8;border-radius:6px;padding:2px 7px;text-transform:uppercase;">Full Page Scan</span>`
+        : '';
+      displayHtml = `<div class="wpia-submitted">✓ Archive: ${items.join(', ')}${fpBadge}</div>`;
+    }
+
+    finalizeCard('webPortalArchiveCard', displayHtml, summary);
+  }
+
+  function injectWebPortalArchiveCard(html) {
+    return html.replace(/\[WEB_PORTAL_ARCHIVE_CARD\]/g, makeWebPortalArchiveCard());
+  }
+
+  function makeImageExposureCard() {
+    return `<div class="img-exposure-card" id="imageExposureCard">
+      <div class="img-exposure-card-header">
+        <svg width="16" height="16" viewBox="0 0 20 20" fill="#2563eb"><path d="M4 3a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V5a2 2 0 00-2-2H4zm0 2h12v10H4V5zm2 2a1 1 0 000 2h8a1 1 0 000-2H6zm0 4a1 1 0 000 2h4a1 1 0 000-2H6z"/></svg>
+        Image Exposure
+      </div>
+      <label class="img-exposure-option selected" onclick="selectExposure(this, 'dual_sided')">
+        <input type="radio" name="img_exposure" value="dual_sided" checked />
+        <div class="img-exposure-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2"><rect x="2" y="4" width="9" height="16" rx="1"/><rect x="13" y="4" width="9" height="16" rx="1"/></svg>
+        </div>
+        <div class="img-exposure-label">
+          <strong>Dual Sided <span class="img-exposure-badge">Default</span></strong>
+          <span>Captures both front and back of the image.</span>
+        </div>
+      </label>
+      <label class="img-exposure-option" onclick="selectExposure(this, 'single_sided')">
+        <input type="radio" name="img_exposure" value="single_sided" />
+        <div class="img-exposure-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2"><rect x="5" y="4" width="14" height="16" rx="1"/></svg>
+        </div>
+        <div class="img-exposure-label">
+          <strong>Single Sided</strong>
+          <span>Captures the front side of the image only.</span>
+        </div>
+      </label>
+      <button class="img-exposure-btn" onclick="submitImageExposureCard()">Save</button>
+    </div>`;
+  }
+
+  function selectExposure(labelEl, value) {
+    document.querySelectorAll('#imageExposureCard .img-exposure-option').forEach(opt => opt.classList.remove('selected'));
+    labelEl.classList.add('selected');
+  }
+
+  function submitImageExposureCard() {
+    const selected = document.querySelector('#imageExposureCard input[name="img_exposure"]:checked');
+    if (!selected) { showToast('Please select an option'); return; }
+    const label = selected.value === 'dual_sided' ? 'Dual Sided' : 'Single Sided';
+    finalizeCard(
+      'imageExposureCard',
+      `<div class="img-exposure-submitted">✓ Image Exposure: ${label}</div>`,
+      `Image Exposure: ${label}`
+    );
+  }
+
+  function injectImageExposureCard(html) {
+    return html.replace(/\[IMAGE_EXPOSURE_CARD\]/g, makeImageExposureCard());
+  }
+
+  function injectYesNo(bubble, text) {
+    if (!/(\(yes\s*\/\s*no\)|\*\*yes\s*\/\s*no\*\*|yes\s*or\s*no)/i.test(text)) return;
+
+    const row = document.createElement('div');
+    row.className = 'yn-row';
+
+    ['Yes', 'No'].forEach(label => {
+      const btn = document.createElement('button');
+      btn.className = 'yn-btn';
+      btn.textContent = label;
+      btn.onclick = () => {
+        row.querySelectorAll('.yn-btn').forEach(b => b.disabled = true);
+        btn.classList.add('selected');
+        document.getElementById('userInput').value = label;
+        sendMessage();
+      };
+      row.appendChild(btn);
+    });
+
+    bubble.appendChild(row);
+  }
+
+  function updateBotBubble(bubble, text, done = false) {
+    bubble.className = done ? 'bubble' : 'bubble cursor';
+    let html = marked.parse(text || '');
+    if (done) {
+      html = injectFormCards(html);   // generic engine for active/generated forms
+      html = injectCards(html);
+      html = injectDatePickers(html);
+      html = injectDepositBankingCard(html);
+      html = injectExceptionHandlingCard(html);
+      html = injectDiscrepancyCard(html);
+      html = injectBackupDestructionCard(html);
+      html = injectMailOutMethodCard(html);
+      html = injectDataCaptureCard(html);
+      html = injectScanlineCard(html);
+      html = injectPayeeVerificationCard(html);
+      html = injectMailingAddressCard(html);
+      html = injectWebPortalAdminCard(html);
+      html = injectWebPortalArchiveCard(html);
+      html = injectImageExposureCard(html);
+      html = injectEmailedReportsCard(html);
+      html = injectScheduledReportsCard(html);
+    }
+    bubble.innerHTML = html;
+    if (done) {
+      hydrateGenericCards(bubble);    // build generic card controls into placeholders
+      injectYesNo(bubble, text);
+      updateProgress(text);
+      refreshUsage();
+      if (/all information has been gathered/i.test(text)) {
+        document.getElementById('submitBtn').disabled = false;
+      }
+    }
+    scrollBottom();
+  }
+
+  /* ── Generic data-driven cards (for the active / generated questionnaire) ── */
+  // When a form definition is active, its prompt emits [FORM_CARD:<id>] tags.
+  // We render those cards generically from the spec served by /api/form, so this
+  // one page runs ANY questionnaire while keeping all its save/resume/submit features.
+  let GEN_FORM = null;            // { cardsById, V (validators), TV (type->validator) }
+  let genSeq = 0;
+  const genState = {};            // holderId -> card spec
+
+  async function loadGenericForm() {
+    try {
+      const r = await fetch('/api/form');
+      if (!r.ok) { GEN_FORM = null; return; }
+      const j = await r.json();
+      const cardsById = {};
+      (j.cards || []).forEach(c => { cardsById[c.id] = c; });
+      const box = {};
+      try { new Function('g', j.validatorSource + ';g.V=VALIDATORS;g.TV=TYPE_VALIDATOR;')(box); } catch (_) {}
+      GEN_FORM = { cardsById, V: box.V || {}, TV: box.TV || {} };
+    } catch (_) { GEN_FORM = null; }
+  }
+
+  // Replace [FORM_CARD:id] tokens with a placeholder we hydrate after innerHTML.
+  function injectFormCards(html) {
+    if (!GEN_FORM) return html;
+    return html.replace(/\[FORM_CARD:([a-z0-9_]+)\]/gi, (m, id) => {
+      const card = GEN_FORM.cardsById[id];
+      if (!card) return m;                       // unknown id → leave as-is
+      const hid = 'gencard_' + (++genSeq);
+      genState[hid] = card;
+      return `<div class="gen-card" id="${hid}"></div>`;
+    });
+  }
+
+  function genEsc(s){ return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+  function genNormOpts(o){ return (o||[]).map(x=>typeof x==='string'?{value:x,label:x}:x); }
+  function genResolveValidator(f){ return f.validate || (GEN_FORM.TV && GEN_FORM.TV[f.type]) || null; }
+
+  function hydrateGenericCards(scope) {
+    scope.querySelectorAll('.gen-card').forEach(holder => {
+      if (holder.dataset.done) return;
+      const card = genState[holder.id];
+      if (!card) return;
+      holder.dataset.done = '1';
+      holder.innerHTML =
+        '<div class="gen-card-title">' + genEsc(card.title || card.id) + '</div>' +
+        (card.intro ? '<div class="gen-card-intro">' + genEsc(card.intro) + '</div>' : '');
+      const body = document.createElement('div');
+      (card.fields || []).forEach(f => body.appendChild(genField(f)));
+      holder.appendChild(body);
+      const applyConds = () => {
+        (card.fields || []).forEach(f => {
+          if (!f.showIf) return;
+          const h = holder.querySelector('[data-fk="' + f.key + '"]');
+          if (!h) return;
+          h.style.display = String(genGetValue(holder, f.showIf.field)) === String(f.showIf.equals) ? '' : 'none';
+        });
+      };
+      holder.addEventListener('input', applyConds);
+      holder.addEventListener('change', applyConds);
+      const actions = document.createElement('div');
+      actions.style.cssText = 'display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;';
+      const btn = document.createElement('button');
+      btn.className = 'gen-card-submit'; btn.textContent = 'Submit';
+      btn.onclick = () => genSubmit(holder, card);
+      const skip = document.createElement('button');
+      skip.className = 'gen-card-skip'; skip.textContent = "I'll answer later";
+      skip.title = 'Defer this section — fields will be flagged as pending for follow-up';
+      skip.onclick = () => genSkip(holder, card);
+      actions.appendChild(btn); actions.appendChild(skip);
+      holder.appendChild(actions);
+      applyConds();
+    });
+  }
+
+  function genField(f) {
+    const host = document.createElement('div'); host.className = 'gen-fld'; host.dataset.fk = f.key;
+    const lab = document.createElement('label'); lab.textContent = (f.label || f.key) + (f.required ? ' *' : '');
+    host.appendChild(lab);
+    if (f.help) { const h = document.createElement('div'); h.className = 'gen-help'; h.textContent = f.help; host.appendChild(h); }
+
+    if (f.type === 'group') {
+      const rows = document.createElement('div');
+      const makeRow = () => {
+        const row = document.createElement('div'); row.className = 'gen-grp-row';
+        (f.fields || []).forEach(sf => row.appendChild(genField(sf)));
+        if (f.repeat) { const rm = document.createElement('button'); rm.type='button'; rm.className='gen-rm'; rm.textContent='✕'; rm.onclick=()=>row.remove(); row.appendChild(rm); }
+        return row;
+      };
+      rows.appendChild(makeRow()); host.appendChild(rows);
+      if (f.repeat) { const add=document.createElement('button'); add.type='button'; add.className='gen-add'; add.textContent='+ add another'; add.onclick=()=>rows.appendChild(makeRow()); host.appendChild(add); }
+      return host;
+    }
+    let ctrl;
+    if (f.type === 'select') {
+      ctrl = document.createElement('div'); ctrl.className='gen-opts';
+      genNormOpts(f.options).forEach(o => { const w=document.createElement('label'); w.className='gen-opt';
+        w.innerHTML='<input type="radio" name="'+f.key+'" value="'+genEsc(o.value)+'"> '+genEsc(o.label); ctrl.appendChild(w); });
+    } else if (f.type === 'multiselect') {
+      ctrl = document.createElement('div'); ctrl.className='gen-opts';
+      genNormOpts(f.options).forEach(o => { const w=document.createElement('label'); w.className='gen-opt';
+        w.innerHTML='<input type="checkbox" name="'+f.key+'" value="'+genEsc(o.value)+'"> '+genEsc(o.label); ctrl.appendChild(w); });
+    } else if (f.type === 'checkbox') {
+      ctrl = document.createElement('label'); ctrl.className='gen-opt';
+      ctrl.innerHTML='<input type="checkbox" name="'+f.key+'"> '+genEsc(f.label||f.key); lab.style.display='none';
+    } else if (f.type === 'textarea') {
+      ctrl = document.createElement('textarea'); ctrl.name=f.key; if (f.placeholder) ctrl.placeholder=f.placeholder;
+    } else {
+      ctrl = document.createElement('input'); ctrl.name=f.key;
+      ctrl.type = {number:'number',date:'date',email:'email',phone:'tel'}[f.type] || 'text';
+      if (f.placeholder) ctrl.placeholder=f.placeholder;
+    }
+    host.appendChild(ctrl);
+    const eb=document.createElement('div'); eb.className='gen-err'; host.appendChild(eb);
+    return host;
+  }
+
+  function genGetValue(scope, key) {
+    const radios = scope.querySelectorAll('input[type=radio][name="'+key+'"]');
+    if (radios.length) { const c=[...radios].find(r=>r.checked); return c?c.value:''; }
+    const checks = scope.querySelectorAll('input[type=checkbox][name="'+key+'"]');
+    if (checks.length===1 && !checks[0].value) return checks[0].checked;
+    if (checks.length) return [...checks].filter(c=>c.checked).map(c=>c.value);
+    const el = scope.querySelector('[name="'+key+'"]');
+    return el ? el.value.trim() : '';
+  }
+
+  function genValidate(f, value, scope) {
+    const host = scope.querySelector('[data-fk="'+f.key+'"]');
+    const eb = host ? host.querySelector('.gen-err') : null;
+    if (eb) { eb.textContent=''; eb.style.display='none'; }
+    const empty = value===''||value==null||value===false||(Array.isArray(value)&&!value.length);
+    if (empty) { if (f.required){ if(eb){eb.textContent=(f.label||f.key)+' is required.';eb.style.display='block';} return false;} return true; }
+    const vn = genResolveValidator(f);
+    if (vn && GEN_FORM.V[vn] && !GEN_FORM.V[vn].test(value)) { if(eb){eb.textContent=GEN_FORM.V[vn].message;eb.style.display='block';} return false; }
+    return true;
+  }
+
+  function genSubmit(holder, card) {
+    let ok = true; const lines = [];
+    const fmt = v => Array.isArray(v) ? v.join(', ') : (v===true?'yes':v);
+    const visit = (field, fieldScope) => {
+      const host = fieldScope.querySelector('[data-fk="'+field.key+'"]');
+      if (host && host.style.display==='none') return;
+      if (field.type==='group') {
+        const rows = host.querySelectorAll('.gen-grp-row');
+        rows.forEach((row,i) => {
+          const items=[];
+          (field.fields||[]).forEach(sf=>{ const v=genGetValue(row,sf.key); if(!genValidate(sf,v,row)) ok=false;
+            if (v!==''&&v!==false&&!(Array.isArray(v)&&!v.length)) items.push(sf.label+': '+fmt(v)); });
+          if (items.length) lines.push((field.label||field.key)+(rows.length>1?' #'+(i+1):'')+' — '+items.join(', '));
+        });
+        return;
+      }
+      const v = genGetValue(fieldScope, field.key);
+      if (!genValidate(field, v, fieldScope)) ok=false;
+      if (v!==''&&v!==false&&!(Array.isArray(v)&&!v.length)) lines.push((field.label||field.key)+': '+fmt(v));
+    };
+    (card.fields||[]).forEach(f => visit(f, holder));
+    if (!ok) return;
+    holder.querySelectorAll('input,select,textarea,button').forEach(el => el.disabled = true);
+    const summary = 'Here are my answers for "'+(card.title||card.id)+'":\n'+lines.join('\n');
+    const input = document.getElementById('userInput');
+    input.value = summary;
+    sendMessage();
+  }
+
+  // Defer a whole card — its fields are flagged PENDING for CRM follow-up.
+  function genSkip(holder, card) {
+    const labels = [];
+    const collect = (fields) => (fields || []).forEach(f => {
+      if (f.type === 'group') collect(f.fields);
+      else labels.push(f.label || f.key);
+    });
+    collect(card.fields);
+    holder.querySelectorAll('input,select,textarea,button').forEach(el => el.disabled = true);
+    const msg = 'I don\'t have the answers for the "' + (card.title || card.id) + '" section right now. ' +
+      'Please mark these as pending so we can follow up later: ' + labels.join(', ') + '.';
+    document.getElementById('userInput').value = msg;
+    sendMessage();
+  }
+
+  /* ── Send message ── */
+  async function sendMessage() {
+    if (isStreaming) return;
+
+    const input = document.getElementById('userInput');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    autoResize(input);
+    document.getElementById('sendBtn').disabled = true;
+
+    appendMessage('user', text);
+    clientHistory.push({role: 'user', content: text});
+
+    // Show thinking placeholder
+    const botBubble = appendMessage('bot', '__thinking__');
+    isStreaming = true;
+    setStatus('Bot is thinking…', true);
+
+    let fullText = '';
+    let receivedFirstChunk = false;
+
+    try {
+      const response = await fetch('/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: text, formId: 'active'}),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Server error: ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const {done, value} = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, {stream: true});
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop(); // keep incomplete chunk
+
+        for (const part of parts) {
+          const line = part.trim();
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const payload = JSON.parse(line.slice(6));
+
+            if (payload.error) {
+              updateBotBubble(botBubble, '⚠️ Error: ' + payload.error, true);
+              break;
+            }
+
+            if (payload.text) {
+              if (!receivedFirstChunk) {
+                receivedFirstChunk = true;
+                setStatus('Responding…', false);
+              }
+              fullText += payload.text;
+              updateBotBubble(botBubble, fullText, false);
+            }
+
+            if (payload.done) {
+              updateBotBubble(botBubble, fullText, true);
+            }
+          } catch (_) { /* malformed event, skip */ }
+        }
+      }
+
+      if (!receivedFirstChunk) {
+        updateBotBubble(botBubble, fullText || '*(no response)*', true);
+      } else {
+        updateBotBubble(botBubble, fullText, true);
+      }
+
+    } catch (err) {
+      updateBotBubble(botBubble, '⚠️ Connection error: ' + err.message, true);
+    } finally {
+      isStreaming = false;
+      setStatus('Ready');
+      document.getElementById('sendBtn').disabled = false;
+      document.getElementById('userInput').focus();
+      if (fullText) {
+        clientHistory.push({role: 'assistant', content: fullText});
+        saveSession();
+      }
+    }
+  }
+
+  /* ── Export JSON ── */
+  async function exportJSON() {
+    const btn = document.getElementById('exportBtn');
+    btn.disabled = true;
+    btn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px;animation:spin 1s linear infinite"><path d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1z"/></svg> Generating…`;
+
+    try {
+      const res = await fetch('/export', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({formId: 'active'})});
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({error: 'Unknown error'}));
+        throw new Error(err.error || `HTTP ${res.status}`);
+      }
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const ts2 = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+      a.href = url;
+      a.download = `lockbox_questionnaire_${ts2}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('✓ JSON exported successfully');
+      refreshUsage();
+    } catch (e) {
+      showToast('⚠ Export failed: ' + e.message, 5000);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"/></svg> Export JSON`;
+    }
+  }
+
+  /* ── Submit = upload answers JSON to the user's Google Drive ── */
+  async function submitToExcel() {
+    const btn = document.getElementById('submitBtn');
+    const restore = () => { btn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px"><path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"/></svg> Submit`; };
+    btn.disabled = true;
+    btn.innerHTML = `<svg viewBox="0 0 20 20" fill="currentColor" style="width:14px;height:14px;animation:spin 1s linear infinite"><path d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1z"/></svg> Submitting…`;
+
+    try {
+      const res = await fetch('/submit', {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({formId: 'active'})});
+      const j = await res.json().catch(() => ({}));
+
+      if (res.status === 401 && j.needAuth) {
+        // Not connected to Google yet — send the user through consent, then return here.
+        showToast('Connecting to Google Drive…', 4000);
+        saveSession();
+        window.location.href = j.authUrl || '/auth/google';
+        return;
+      }
+      if (!res.ok) throw new Error(j.error || `HTTP ${res.status}`);
+
+      refreshUsage();
+      showToast('✓ Submitted to Google Drive — JSON, Sheet & BRD created', 7000);
+
+      // Show links to all three outputs in the toast.
+      const o = j.outputs || {};
+      const t = document.getElementById('toast');
+      if (t) {
+        [['📄 BRD doc', o.brd], ['📊 Sheet', o.sheet], ['🗂 JSON', o.json]].forEach(([label, out]) => {
+          if (!out || !out.link) return;
+          t.appendChild(document.createElement('br'));
+          const a = document.createElement('a');
+          a.href = out.link; a.target = '_blank'; a.textContent = label;
+          a.style.cssText = 'display:inline-block;margin-top:4px;margin-right:12px;color:var(--accent,#2563eb)';
+          t.appendChild(a);
+        });
+      }
+      restore();
+    } catch (e) {
+      showToast('⚠ Submit failed: ' + e.message, 7000);
+      btn.disabled = false;
+      restore();
+    }
+  }
+
+  /* ── Reset ── */
+  async function resetChat() {
+    if (isStreaming) return;
+    if (!confirm('Start a new session? Current conversation will be cleared.')) return;
+
+    try {
+      await fetch('/reset', {method: 'POST'});
+    } catch (_) { /* ignore */ }
+
+    document.getElementById('messages').innerHTML = '';
+    document.getElementById('submitBtn').disabled = false;
+    resetProgress();
+    setStatus('Ready');
+    clientHistory.length = 0;
+    clearSavedSession();
+    // Clear identity and return to landing screen
+    localStorage.removeItem('lb-user');
+    document.getElementById('userPill').style.display = 'none';
+    ['lf-name','lf-email','lf-company','lf-role'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) { el.value = ''; el.classList.remove('error'); }
+    });
+    showLanding();
+    document.getElementById('lf-name').focus();
+  }
+
+  /* ── Auto-start bot greeting ── */
+  async function startSession() {
+    // Send a hidden trigger to get the bot's opening message
+    const botBubble = appendMessage('bot', '__thinking__');
+    isStreaming = true;
+    setStatus('Starting session…', true);
+
+    let fullText = '';
+
+    try {
+      const res = await fetch('/chat', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({message: "I'm ready to start. Please greet me and ask the first question of the questionnaire.", formId: 'active'}),
+      });
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const {done, value} = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, {stream: true});
+        const parts = buffer.split('\n\n');
+        buffer = parts.pop();
+
+        for (const part of parts) {
+          const line = part.trim();
+          if (!line.startsWith('data: ')) continue;
+          try {
+            const payload = JSON.parse(line.slice(6));
+            if (payload.text) {
+              fullText += payload.text;
+              updateBotBubble(botBubble, fullText, false);
+              setStatus('Responding…', false);
+            }
+            if (payload.done) updateBotBubble(botBubble, fullText, true);
+          } catch (_) {}
+        }
+      }
+      updateBotBubble(botBubble, fullText, true);
+    } catch (e) {
+      updateBotBubble(botBubble, 'Welcome! I\'ll guide you through the Private Label Lockbox Implementation Questionnaire. How can I assist?', true);
+    } finally {
+      isStreaming = false;
+      setStatus('Ready');
+      document.getElementById('userInput').focus();
+      if (fullText) {
+        clientHistory.push({role: 'assistant', content: fullText});
+        saveSession();
+      }
+    }
+  }
+
+  // CSS for spin animation
+  const style = document.createElement('style');
+  style.textContent = `@keyframes spin { to { transform: rotate(360deg); } }
+  /* Sharp + bright card design */
+  .gen-card{--ga:#2f6bff;border:1px solid #c7d6f5;border-top:4px solid var(--ga);border-radius:4px;padding:0 16px 16px;margin:12px 0;background:#fff;box-shadow:0 2px 10px rgba(47,107,255,.10);}
+  .gen-card-title{font-weight:700;font-size:15px;letter-spacing:.2px;color:var(--ga);margin:0 -16px 0;padding:12px 16px 10px;border-bottom:1px solid #e4ebfb;}
+  .gen-card-intro{color:#475569;font-size:13px;margin:10px 0 14px;}
+  .gen-fld{margin-bottom:13px;}
+  .gen-fld>label{display:block;font-size:12.5px;font-weight:600;color:#334155;margin-bottom:5px;letter-spacing:.2px;}
+  .gen-fld input[type=text],.gen-fld input[type=number],.gen-fld input[type=date],.gen-fld input[type=email],.gen-fld input[type=tel],.gen-fld textarea{
+    width:100%;border:1.5px solid #cbd5e1;border-radius:3px;padding:9px 10px;font-size:14px;font-family:inherit;background:#fff;color:#0f172a;box-sizing:border-box;transition:border-color .12s,box-shadow .12s;}
+  .gen-fld input:focus,.gen-fld textarea:focus{outline:none;border-color:var(--ga);box-shadow:0 0 0 3px rgba(47,107,255,.18);}
+  .gen-fld textarea{min-height:64px;resize:vertical;}
+  .gen-opts{display:flex;flex-direction:column;gap:5px;}
+  .gen-opt{display:flex;align-items:center;gap:8px;font-size:14px;color:#1e293b;padding:5px 8px;border:1.5px solid #e2e8f0;border-radius:3px;cursor:pointer;transition:border-color .12s,background .12s;}
+  .gen-opt:hover{border-color:var(--ga);background:#f5f8ff;}
+  .gen-opt input{width:auto;accent-color:var(--ga);}
+  .gen-grp-row{position:relative;border:1.5px solid #e2e8f0;border-left:3px solid var(--ga);border-radius:3px;padding:12px;margin-bottom:8px;background:#fafcff;}
+  .gen-rm{position:absolute;top:6px;right:6px;border:0;background:transparent;color:#ef4444;cursor:pointer;font-size:13px;font-weight:700;}
+  .gen-add{border:1.5px dashed var(--ga);background:#f5f8ff;color:var(--ga);border-radius:3px;padding:7px 12px;cursor:pointer;font-size:13px;font-weight:600;}
+  .gen-help{font-size:12px;color:#64748b;margin-bottom:5px;}
+  .gen-err{color:#dc2626;font-size:12px;font-weight:600;margin-top:4px;display:none;}
+  .gen-card-submit{background:var(--ga);color:#fff;border:0;border-radius:3px;padding:10px 20px;font-size:13.5px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;cursor:pointer;box-shadow:0 2px 8px rgba(47,107,255,.35);transition:filter .12s;}
+  .gen-card-submit:hover:not(:disabled){filter:brightness(1.08);}
+  .gen-card-submit:disabled{opacity:.55;cursor:default;box-shadow:none;}
+  .gen-card-skip{background:#fff;border:1.5px solid #cbd5e1;color:#475569;border-radius:3px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;}
+  .gen-card-skip:hover:not(:disabled){border-color:var(--ga);color:var(--ga);}
+  .gen-card-skip:disabled{opacity:.45;cursor:default;}
+  /* Dark theme: keep cards bright but readable */
+  [data-theme=dark] .gen-card{background:#0f1830;border-color:#24345e;box-shadow:0 2px 12px rgba(47,107,255,.18);}
+  [data-theme=dark] .gen-card-title{border-bottom-color:#24345e;}
+  [data-theme=dark] .gen-card-intro{color:#94a3b8;}
+  [data-theme=dark] .gen-fld>label{color:#cbd5e1;}
+  [data-theme=dark] .gen-fld input,[data-theme=dark] .gen-fld textarea{background:#0b1226;border-color:#2c3e68;color:#e2e8f0;}
+  [data-theme=dark] .gen-opt{color:#e2e8f0;border-color:#2c3e68;}
+  [data-theme=dark] .gen-opt:hover{background:#15213f;}
+  [data-theme=dark] .gen-grp-row{background:#0b1226;border-color:#2c3e68;}
+  [data-theme=dark] .gen-card-skip{background:transparent;color:#cbd5e1;border-color:#2c3e68;}`;
+  document.head.appendChild(style);
+
+  // Returning from Google OAuth consent → finish the Drive upload (runs on every
+  // init path, including auto-resume, which returns early).
+  function maybeFinishDriveReturn() {
+    const gd = new URLSearchParams(location.search).get('gdrive');
+    if (!gd) return;
+    history.replaceState({}, '', location.pathname);
+    if (gd === 'connected') { showToast('✓ Google Drive connected — uploading…', 4000); setTimeout(submitToExcel, 900); }
+    else showToast('⚠ Google Drive connection failed. Please try Submit again.', 6000);
+  }
+
+  // Enter on landing fields submits the form
+  document.getElementById('identityForm').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') { e.preventDefault(); startQuestionnaire(); }
+  });
+
+  // Kick off on load: skip the landing screen if we already have an identity.
+  window.addEventListener('DOMContentLoaded', async () => {
+    await loadGenericForm();   // load active-form card specs (no-op if none active)
+    refreshUsage();
+    const user = getStoredUser();
+    const saved = loadSavedSession();
+    updateResumeBtnVisibility();
+    if (user && user.name && user.email && user.company) {
+      renderUserPill(user);
+      if (saved) {
+        // Auto-resume — the explicit "Resume" header button is also available.
+        const ok = await resumeSavedSession(saved);
+        if (ok) {
+          showToast(`✓ Resumed previous session from ${new Date(saved.savedAt).toLocaleString()}`, 5000);
+          maybeFinishDriveReturn();
+          return;
+        }
+        clearSavedSession();
+      }
+      showChat();
+      startSession();
+    } else {
+      showLanding();
+      document.getElementById('lf-name').focus();
+    }
+    maybeFinishDriveReturn();
+  });
+</script>
+
+<!-- ── Floating help assistant (grounded in docs/) ── -->
+<style>
+  #helpFab{position:fixed;right:20px;bottom:20px;z-index:9998;background:var(--accent,#2563eb);color:#fff;border:0;border-radius:999px;padding:12px 16px;font-size:14px;font-weight:600;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.25);display:flex;align-items:center;gap:8px;}
+  #helpPanel{position:fixed;right:20px;bottom:74px;z-index:9999;width:360px;max-width:calc(100vw - 40px);height:460px;max-height:calc(100vh - 120px);background:var(--card-bg,#fff);color:inherit;border:1px solid var(--border,#d1d5db);border-radius:14px;box-shadow:0 10px 30px rgba(0,0,0,.3);display:none;flex-direction:column;overflow:hidden;}
+  #helpPanel.open{display:flex;}
+  #helpHead{padding:12px 14px;border-bottom:1px solid var(--border,#e5e7eb);font-weight:600;display:flex;align-items:center;justify-content:space-between;}
+  #helpHead small{font-weight:400;color:var(--muted,#6b7280);display:block;font-size:11px;}
+  #helpClose{background:transparent;border:0;color:var(--muted,#6b7280);font-size:18px;cursor:pointer;}
+  #helpMsgs{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px;font-size:13.5px;line-height:1.5;}
+  .hmsg{padding:9px 12px;border-radius:10px;max-width:90%;white-space:pre-wrap;}
+  .hmsg.user{align-self:flex-end;background:var(--accent,#2563eb);color:#fff;}
+  .hmsg.bot{align-self:flex-start;background:var(--panel2,#f1f5f9);border:1px solid var(--border,#e5e7eb);}
+  .hmsg .src{display:block;margin-top:6px;font-size:11px;color:var(--muted,#6b7280);}
+  #helpForm{display:flex;gap:8px;padding:10px;border-top:1px solid var(--border,#e5e7eb);}
+  #helpInput{flex:1;border:1px solid var(--border,#d1d5db);border-radius:8px;padding:9px;font-size:13.5px;font-family:inherit;background:var(--input-bg,#fff);color:inherit;}
+  #helpSend{background:var(--accent,#2563eb);color:#fff;border:0;border-radius:8px;padding:0 14px;font-weight:600;cursor:pointer;}
+  #helpSend:disabled{opacity:.5;cursor:default;}
+</style>
+<button id="helpFab" title="Ask the help assistant">💬 Help</button>
+<div id="helpPanel" role="dialog" aria-label="Help assistant">
+  <div id="helpHead"><div>Help Assistant<small>Answers from the documentation</small></div><button id="helpClose" aria-label="Close">×</button></div>
+  <div id="helpMsgs"></div>
+  <form id="helpForm"><input id="helpInput" type="text" placeholder="Ask about a term or question…" autocomplete="off"><button id="helpSend" type="submit">Ask</button></form>
+</div>
+<script>
+(function(){
+  const fab=document.getElementById('helpFab'), panel=document.getElementById('helpPanel');
+  const msgs=document.getElementById('helpMsgs'), form=document.getElementById('helpForm');
+  const input=document.getElementById('helpInput'), sendBtn=document.getElementById('helpSend');
+  let ready=null, greeted=false, hist=[];
+  const esc=s=>String(s==null?'':s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+
+  function add(role, html){
+    const d=document.createElement('div'); d.className='hmsg '+role; d.innerHTML=html;
+    msgs.appendChild(d); msgs.scrollTop=msgs.scrollHeight; return d;
+  }
+  async function checkReady(){
+    if(ready!==null) return ready;
+    try{ const r=await fetch('/help/status'); const j=await r.json(); ready=!!j.ready; }catch{ ready=false; }
+    return ready;
+  }
+  async function openPanel(){
+    panel.classList.add('open'); input.focus();
+    if(greeted) return; greeted=true;
+    const ok=await checkReady();
+    add('bot', ok
+      ? 'Hi! Ask me anything about this questionnaire — e.g. <i>"What is a DDA?"</i> or <i>"Wholesale vs Wholetail?"</i>. I answer from the documentation.'
+      : '⚠ Help documentation isn\'t indexed yet. Add files to <code>docs/</code> and run <code>node scripts/build-help-index.js</code>.');
+  }
+  fab.onclick=()=> panel.classList.contains('open') ? panel.classList.remove('open') : openPanel();
+  document.getElementById('helpClose').onclick=()=>panel.classList.remove('open');
+
+  form.addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const q=input.value.trim(); if(!q) return;
+    input.value=''; sendBtn.disabled=true;
+    add('user', esc(q)); hist.push({role:'user',content:q});
+    const thinking=add('bot','…');
+    try{
+      const r=await fetch('/help',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:q,history:hist.slice(-6),formId:'active'})});
+      const j=await r.json();
+      if(!r.ok) throw new Error(j.error||('HTTP '+r.status));
+      let html=esc(j.answer);
+      if(j.sources&&j.sources.length) html+='<span class="src">📄 '+j.sources.map(esc).join(', ')+'</span>';
+      thinking.innerHTML=html; hist.push({role:'assistant',content:j.answer});
+      if(typeof refreshUsage==='function') refreshUsage();
+    }catch(err){ thinking.innerHTML='⚠ '+esc(err.message); }
+    finally{ sendBtn.disabled=false; input.focus(); msgs.scrollTop=msgs.scrollHeight; }
+  });
+})();
+</script>
+</body>
+</html>

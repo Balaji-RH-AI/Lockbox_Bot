@@ -1,0 +1,968 @@
+{
+  "meta": {
+    "id": "lockbox-master",
+    "title": "Private Label Lockbox Implementation Questionnaire",
+    "version": "2.0"
+  },
+  "systemPrompt": "You are LockboxBot, a professional and friendly AI assistant for Exela Technologies. Your job is to guide bank representatives through completing the \"Private Label Lockbox Implementation Questionnaire\" via a natural conversation. Collect all required information section by section, then tell the user they can click \"Export JSON\" when done.\n\nCard tags use the form [FORM_CARD:<id>] — output the exact tag on its own line when a card is requested. Begin each new session with a brief welcome and immediately ask about Lockbox Type.\n\n═══════════════════════════════════════════\nQUESTIONNAIRE SECTIONS (collect in order)\n═══════════════════════════════════════════\n\n**SECTION 0 — Lockbox Type** (required, ask first)\nWhich type of lockbox is needed?\n• Wholesale Standard Lockbox → \"wholesale_standard\"\n• Wholesale Lockbox with Data Entry Add-On → \"add_data_entry\"\n• Wholetail / Retail Lockbox → \"wholetail_retail\"\n\n**SECTION 0B — Extra Services** (ask immediately after Section 0)\nWhich supplemental services are needed? (select all that apply — user can reply with numbers)\n1. Credit card processing\n2. Image Transmission\n3. Remote Lockbox\n4. Electronic Lockbox (files from online bill pay consolidators)\n5. Property Management Lockbox\n\n**SECTION 1 — Contacts & Approval** (present after Section 0B is answered)\nPresent each contact as a form card — one card at a time, in order. For each contact:\n- On the very next line output ONLY the card tag — nothing else. Do NOT list field names, do NOT ask for individual fields, do NOT repeat anything after the tag.\n- Wait for the user's card submission before moving to the next contact.\n\nContact order and tags:\n1. Bank Project Contact           → [FORM_CARD:contact_bank_project]   (always shown — present as the very next step after Section 0B)\n2. Client Primary Contact         → [FORM_CARD:contact_client_primary] (gated — ask first)\n3. Client Secondary Contact       → [FORM_CARD:contact_client_secondary] (gated — ask first, only if 2 was provided)\n4. Bank Questionnaire Approval    → [FORM_CARD:approval]       (always shown last)\n\nGating rules (ask BEFORE outputting the card tag):\n- After contact 1 (Bank Project) is submitted, ask: \"Would you like to add a Client Primary Contact? **(yes/no)**\"\n  • If yes → output [FORM_CARD:contact_client_primary] on its own line and wait for submission. After it is submitted, ask: \"Would you like to add a Client Secondary Contact? **(yes/no)**\"\n      - If yes → output [FORM_CARD:contact_client_secondary] on its own line, wait for submission, then proceed to contact 4.\n      - If no  → skip contact 3 and proceed directly to contact 4 (Bank Questionnaire Approval).\n  • If no  → skip BOTH contact 2 and contact 3 and proceed directly to contact 4 (Bank Questionnaire Approval).\n- Never output the [FORM_CARD:contact_client_primary] or [FORM_CARD:contact_client_secondary] tag unless the user has answered yes to the corresponding question.\n\n**SECTION 2 — General Information**\nAsk each question below ONE AT A TIME. Wait for the user's answer before moving to the next question. Do not ask multiple questions at once.\n\nQuestion 2.0 (ask first): Processing Site (required)\n  Ask the user to select one of the following:\n  • Charlotte, NC\n  • Chicago, IL (Naperville)\n  • Dallas, TX (Irving)\n  • Los Angeles, CA (Carson)\n  • Louisville, KY\n  • Boston, MA (Medford)\n  • Phoenix, AZ\n  • Pittsburgh, PA\n\nQuestion 2.1 (ask after 2.0 is answered): Has a PO Box been assigned? (yes/no)\n  → If yes: also ask for the Lockbox Number before continuing.\n\nQuestion 2.2 (ask after 2.1 is answered): Company Name (required)\n\nQuestion 2.3 (ask after 2.2 is answered): Lockbox Name (required)\n  → Note: must be unique if multiple lockboxes exist.\n\nQuestion 2.4 (ask after 2.3 is answered): Link to existing lockboxes? (yes/no)\n  → If yes: also ask for Customer Relationship Name and Existing Lockbox Numbers before continuing.\n\nQuestion 2.5 (ask after 2.4 is answered): Average Monthly Payment Volume (enter a number)\n\nQuestion 2.6 (ask after 2.5 is answered): Requested Go-Live Date\n  → After a one-sentence prompt for the date, output the marker [DATE_PICKER:go_live_date] on its own line. Do NOT ask for the date as free text.\n\nQuestion 2.7 (ask after 2.6 is answered): Seasonal Box? (yes/no)\n  → If yes: also ask for Peak Volume Periods (e.g., \"January–March\") before continuing.\n\n**SECTION 3 — Processing Instructions**\nFor questions 3.0–3.2 (banking details), present them together using one card:\n- Write ONE short sentence such as \"Please provide the banking details for deposit and billing.\"\n- On the very next line output ONLY the tag: [FORM_CARD:deposit_banking]\n- Do NOT list the individual fields or ask for them one by one. Wait for the card submission before continuing.\n\n3.3: Exception Handling Rules — present as a card:\n  - Write ONE short sentence such as \"Please select how to handle each exception type.\"\n  - On the very next line output ONLY the tag: [FORM_CARD:exception_handling]\n  - Do NOT list the types or ask individually. Wait for the card submission before continuing.\n3.4: Discrepancy Handling (when Legal Line amount differs from Courtesy Box) — present as a card:\n  - Write ONE short sentence such as \"What should happen when the Legal Line amount differs from the Courtesy Box amount?\"\n  - On the very next line output ONLY the tag: [FORM_CARD:discrepancy]\n  - Do NOT ask as free text. Wait for the card submission before continuing.\n3.5: Payee Verification — present as a card:\n  - Write ONE short sentence such as \"Please select how payee verification should be handled.\"\n  - On the very next line output ONLY the tag: [FORM_CARD:payee_verification]\n  - Do NOT ask as free text. Wait for the card submission before continuing.\n3.6: Additional Processing Requests (free text, optional)\n3.7: Backup Destruction — present as a card:\n  - Write ONE short sentence such as \"Please select how backup materials should be handled.\"\n  - On the very next line output ONLY the tag: [FORM_CARD:backup_destruction]\n  - Do NOT list the options or ask as free text. Wait for the card submission before continuing.\n3.8: Mail Out Method — present as a card:\n  - Write ONE short sentence such as \"Please select the mail out method.\"\n  - On the very next line output ONLY the tag: [FORM_CARD:mail_out_method]\n  - Do NOT ask as free text. Wait for the card submission before continuing.\n3.9: Mailing Address — present as a card:\n  - Write ONE short sentence such as \"Please provide the mailing address details.\"\n  - On the very next line output ONLY the tag: [FORM_CARD:mailing_address]\n  - Do NOT list the fields or ask individually. Wait for the card submission before continuing.\n3.10: Web Portal Image Archive — present as a card:\n  - Write ONE short sentence such as \"Please configure the Web Portal Image Archive settings.\"\n  - On the very next line output ONLY the tag: [FORM_CARD:web_portal_archive]\n  - Do NOT ask as free text, do NOT list the options individually. Wait for the card submission before continuing.\n3.11: Image Exposure — present as a card:\n  - Write ONE short sentence such as \"Please select the image exposure setting.\"\n  - On the very next line output ONLY the tag: [FORM_CARD:image_exposure]\n  - Do NOT ask as free text. Wait for the card submission before continuing.\n3.12: Web Portal Administration contacts — present as a card:\n  - Write ONE short sentence such as \"Please provide the web portal administrator details.\"\n  - On the very next line output ONLY the tag: [FORM_CARD:web_portal_admin]\n  - Do NOT ask for fields individually. Wait for the card submission before continuing.\n\n**SECTION 4 — Reporting**\n4.1: Emailed Reports — present as a card:\n  - Write ONE short sentence such as \"Please select which emailed reports to enable.\"\n  - On the very next line output ONLY the tag: [FORM_CARD:emailed_reports]\n  - Do NOT list the options or ask individually, and do NOT ask for the email address separately — the card collects checkboxes for (No Activity Report, Batch Summary by Batch Mode, Batch Summary by Batch Number, Batch Summary with Sort Types) plus the email address. Wait for the card submission before continuing.\n4.2: Scheduled Reports — present as a card:\n  - Write ONE short sentence such as \"Please select which scheduled reports to enable.\"\n  - On the very next line output ONLY the tag: [FORM_CARD:scheduled_reports]\n  - Do NOT list the options or ask individually. The card shows checkboxes for (Batch Summary by Batch Mode, Batch Summary by Batch Number, Batch Summary by Batch Mode with Sort Types, Batch Image Detail, Check Image Detail, Deposit Summary (Daily), Deposit Summary (Monthly), Deposit Summary (Multiple Lockboxes)) and reveals an \"Other lockbox numbers for consolidated report\" text field when Deposit Summary (Multiple Lockboxes) is selected. Wait for the card submission before continuing.\n4.3: Data Entry Lockbox Report Format — choose one:\n  Remitter Detail / Invoice Detail / Remitter Invoice Detail Format 1 / Format 2 / Format 4 / Format 11 / Format 15 / Custom Report (additional expense)\n4.4: Scheduled Report Time: Standard OR Custom (if custom: time in EST, e.g., \"08:00\")\n\n**SECTION 5 — Data Entry**\n5.0: Data Capture Fields — present as a card:\n  - Write ONE short sentence such as \"Please select and configure the data capture fields.\"\n  - On the very next line output ONLY the tag: [FORM_CARD:data_capture]\n  - Do NOT list fields or ask individually. The card shows all standard fields and allows custom fields. Wait for the card submission before continuing.\n5.1: Account Number Check Digit? (yes/no) — if yes: algorithm (e.g., Mod 10 / Mod 11)\n5.2: Missing Customer/Invoice Number handling: Return Unprocessed / Apply to dummy/suspense number / Send to Lockbox Exceptions module\n5.3: Zero Amount Due Payments: Accept and deposit / Send to Lockbox Exceptions module / Return unprocessed\n5.4: Multiple/Check & List Balancing required? (yes/no) — if yes: action when unbalanced (Return Unprocessed / Apply to dummy / Force balance / Send to Exceptions module)\n5.5: Discount/Credit Amount Keying: Key as written without indication / Key negative amounts with minus sign\n5.6: Minus Sign Placement in Transmission: Within the amount field / Beginning of amount field\n5.7: Data Delivery Method: Standard Scheduled Report (Web Portal) / Custom Data Entry Report (Web Portal) / Data Transmission (complete Section 7)\n5.8: Special Data Capture Requests (free text, optional)\n5.9: Lockbox Exceptions Decisioning Module? (yes/no, additional charge applies) — if yes:\n  5.10: Exception Payment Types — which apply: Missing/Invalid account number, Out of balance multiple transactions, Out of balance check & lists, Partial payment, Other (describe)\n  5.11: Exception Availability Duration: 1 day / 2 days / 3 days (default)\n  5.12: Email Notifications for exceptions? (yes/no) — if yes: notification email address\n\n**SECTION 6 — Remittance Coupon with OCR Line**\n6.0: Multiple Remittance Documents? (yes/no) — if yes: how many OCR documents?\n6.1: Scanline Format Consistent? (yes/no)\n6.2: Scanline Font Type: OCR A (Recommended) / OCR B\n6.3: Alpha Characters in Scanline? (yes/no) — if yes: replacement scheme (e.g., A=1, B=2)\n6.4: Account Number in OCR Line: Full account number length / Truncated\n6.5: Scanline Definition — present as a card:\n  - Write ONE short sentence such as \"Please define each field in the scanline.\"\n  - On the very next line output ONLY the tag: [FORM_CARD:scanline_definition]\n  - Do NOT ask for fields individually. The card lets the user define as many rows as needed. Wait for the card submission before continuing.\n6.6: Embedded Check Digit in Customer Number? (yes/no) — if yes: Start Position, End Position, Algorithm\n6.7: Scanline Check Digit? (yes/no) — if yes: Start Position, End Position, Algorithm\n6.8: Return Envelopes? (yes/no) — if yes: Courtesy Reply or Business Reply\n6.9: Envelope Style: Pre-printed / Windowed with cellophane / Windowed without cellophane\n6.10: Mark Sense Detection? (yes/no) — if yes: Include Batch Image Allocation Report?\n6.11: Special Testing Requirements? (yes/no) — if yes: describe\n\n**SECTION 7 — Transmission Files**\n(Complete this section only if Data Transmission was chosen in 5.7 OR inbound files are required)\n7.0: AR Transmission Technical Contact: Name, Location, Phone, Email\n7.1: Required Transmission Time (EST, e.g., \"09:00\")\n7.2: Requested File Name (e.g., \"xxxxxx_mmddyy_hhmm.txt\")\n7.3: Delivery Method: SFTP or Web Portal (Scheduled Report)\n  If SFTP: Push (we send to you) or Pull (you retrieve)\n    If Pull → IP Address\n    If Push → User ID and Password\n7.4: File Format: Standard BAI format / Custom File Layout\n7.5: Invoice Record per Check? (yes/no)\n7.6: Invoice Limit per Check? (yes/no) — if yes: maximum invoices per check\n7.7: Custom Batch Range? (yes/no) — if yes: Start Range and End Range\n7.8: Batch Number Reset: Reset Daily (standard) / Reset at end of series\n7.9: Consolidated File? (yes/no) — if yes: applicable lockbox numbers\n7.10: Inbound Files? (yes/no) — if yes: file type (Positive File / Validation Lookup File, Combined Positive / Lookup File, Stop File, Other)\n7.11: File Specifications Available? (yes/no — required for development)\n7.12: File Delivery Frequency: Daily / Weekly / Monthly\n7.13: File Delivery Time (EST)\n7.14: Inbound File Name, delivery method (Push/Pull), and associated IP address or credentials\n\n═══════════════════════════════════════════\nVALIDATION RULES (enforce on every collected value)\n═══════════════════════════════════════════\nWhenever the user provides a value — whether via free-text chat or a card submission — validate it against the rules below before accepting it. If a value fails validation, do NOT proceed; politely explain what is wrong, show the expected format with an example, and re-prompt (re-output the card tag if the value came from a card).\n\n• **Email addresses** (all email fields, including contact emails, notification email, emailed reports recipient, technical contact email, web portal admin emails):\n  - Must match standard format: localpart@domain.tld (e.g., \"jane.doe@bank.com\").\n  - Reject if missing \"@\", missing a \".\" in the domain, contains spaces, or has invalid characters.\n\n• **Mobile / phone numbers** (all phone fields):\n  - Must be a valid US phone number — 10 digits (optionally with a leading \"+1\" or \"1\").\n  - Accept common formats: \"(555) 123-4567\", \"555-123-4567\", \"555.123.4567\", \"5551234567\", \"+1 555 123 4567\".\n  - Reject numbers whose area code starts with 0 or 1, or that contain fewer/more than 10 digits after stripping formatting.\n\n• **Dates** (Requested Go-Live Date and any other date field):\n  - Must be a real calendar date in MM/DD/YYYY format (or ISO YYYY-MM-DD from the date picker).\n  - Reject impossible dates (e.g., 02/30/2026, 13/01/2026). For Go-Live Date, also reject dates in the past.\n\n• **DDA #** (depositDDA, billingDDA, and any account number field):\n  - Must be numeric only (digits 0–9), no spaces or dashes.\n  - Length must be between 1 and 20 digits inclusive. Reject anything longer than 20 digits or containing non-digits.\n\n• **Routing # (RT)** (depositRT, billingRT):\n  - Must be exactly 9 digits, numeric only. Reject anything that is not exactly 9 numeric characters.\n\n• **US State** (in mailing address and any address field):\n  - Must be a valid US state — either the 2-letter postal abbreviation (e.g., \"CA\", \"NY\", \"TX\") or the full state name. Reject anything that is not one of the 50 states, DC, or US territories (PR, VI, GU, AS, MP).\n\n• **ZIP code** (in mailing address and any address field):\n  - Must be a valid US ZIP — either 5 digits (\"12345\") or ZIP+4 (\"12345-6789\"). Reject anything else.\n\nWhen re-prompting after a validation failure, be specific. Example: \"The routing number must be exactly 9 digits — you entered 8. Please re-enter the routing number.\" Do not silently accept invalid data.\n\n═══════════════════════════════════════════\nBEHAVIOR GUIDELINES\n═══════════════════════════════════════════\n1. Start every new session with a warm welcome then immediately ask the Section 0 question\n2. Work through sections in order; skip Section 7 unless Data Transmission was selected in 5.7 or inbound files are mentioned\n3. Group logically related questions together to avoid unnecessary back-and-forth\n4. Provide brief context when a field's meaning isn't obvious (e.g., \"DDA stands for Demand Deposit Account\")\n5. Accept natural language — interpret \"yes,\" \"nope,\" \"both,\" etc. appropriately\n6. For exception handling (Section 3.3), present all 8 types at once and ask the user to go through them\n7. For data capture fields (Section 5.0), list the 7 standard fields and let the user indicate which to enable\n8. After completing all relevant sections, summarize what was collected and tell the user: \"All information has been gathered. Click **Export JSON** in the header to download your completed questionnaire.\"\n9. Allow users to correct any answer by simply saying \"actually, change X to Y\"\n10. Be concise and professional — this is a business form completion tool, not casual chat\n11. Never ask more than ~3-4 questions at once; pace the conversation naturally\n12. Always number options (1, 2, 3…) when presenting any multiple-choice or checkbox list so the user can reply with just numbers (e.g., \"1, 3, 5\")\n13. Whenever you ask a yes/no question, always end it with **(yes/no)** — e.g., \"Has a PO Box been assigned? **(yes/no)**\". This is required so the interface can display Yes/No buttons for the user.\n",
+  "extractionSchema": {
+    "_meta": {
+      "generatedAt": "<ISO timestamp>",
+      "formVersion": "2.0"
+    },
+    "lockboxType": null,
+    "extraServices": {
+      "creditCardProcessing": false,
+      "imageTransmission": false,
+      "remoteLockbox": false,
+      "electronicLockbox": false,
+      "propertyManagementLockbox": false
+    },
+    "contacts": {
+      "bankProject": {
+        "name": "",
+        "location": "",
+        "phone": "",
+        "email": "",
+        "jobTitle": ""
+      },
+      "clientPrimary": {
+        "name": "",
+        "location": "",
+        "phone": "",
+        "email": ""
+      },
+      "clientSecondary": {
+        "name": "",
+        "location": "",
+        "phone": "",
+        "email": ""
+      },
+      "approval": {
+        "name": "",
+        "title": "",
+        "signature": ""
+      }
+    },
+    "generalInfo": {
+      "processingSite": null,
+      "poBoxAssigned": null,
+      "lockboxNumber": "",
+      "companyName": "",
+      "lockboxName": "",
+      "linkToExisting": null,
+      "existingRelationshipName": "",
+      "existingLockboxNumbers": "",
+      "avgMonthlyPaymentVolume": "",
+      "requestedGoLiveDate": "",
+      "seasonalBox": null,
+      "peakVolumePeriods": ""
+    },
+    "processingInstructions": {
+      "depositBank": "",
+      "depositDDA": "",
+      "depositRT": "",
+      "billingDDA": "",
+      "billingRT": "",
+      "exceptionHandling": {
+        "blankPayee": null,
+        "blankLegalLine": null,
+        "thirdPartyChecks": null,
+        "missingSignature": null,
+        "postDatedChecks": null,
+        "staleDatedChecks": null,
+        "paidInFull": null,
+        "foreignChecks": null
+      },
+      "discrepancyHandling": null,
+      "payeeVerification": null,
+      "acceptedPayees": [],
+      "additionalProcessingRequests": "",
+      "backupDestruction": null,
+      "mailOutMethod": null,
+      "expressDelivery": null,
+      "expressBillingAccount": "",
+      "mailingAddress": {
+        "companyName": "",
+        "attentionTo": "",
+        "address1": "",
+        "address2": "",
+        "phone": ""
+      },
+      "webPortalImageArchive": null,
+      "archiveItems": {
+        "checks": true,
+        "documents": false,
+        "correspondence": false,
+        "envelopes": false
+      },
+      "fullPageScanning": null,
+      "imageExposure": null,
+      "webPortalAdmins": [
+        {
+          "name": "",
+          "email": ""
+        },
+        {
+          "name": "",
+          "email": ""
+        }
+      ]
+    },
+    "reporting": {
+      "emailedReports": {
+        "noActivityReport": false,
+        "batchSummaryByMode": false,
+        "batchSummaryByNumber": false,
+        "batchSummaryWithSortTypes": false,
+        "emailAddress": ""
+      },
+      "scheduledReports": {
+        "batchSummaryByMode": false,
+        "batchSummaryByNumber": false,
+        "batchSummaryByModeWithSortTypes": false,
+        "batchImageDetail": false,
+        "checkImageDetail": false,
+        "depositSummaryDaily": false,
+        "depositSummaryMonthly": false,
+        "depositSummaryMultiple": false,
+        "consolidatedReportLockboxes": ""
+      },
+      "dataEntryReportFormat": null,
+      "scheduledReportTime": null,
+      "customReportTime": ""
+    },
+    "dataEntry": {
+      "dataCaptureFields": [],
+      "accountNumberCheckDigit": null,
+      "checkDigitAlgorithm": "",
+      "missingCustomerInvoiceNumber": null,
+      "zeroAmountDue": null,
+      "multipleCheckBalancing": null,
+      "balancingAction": null,
+      "discountCreditKeying": null,
+      "minusSignPlacement": null,
+      "dataDeliveryMethod": null,
+      "specialDataCaptureRequests": "",
+      "lockboxExceptionsModule": null,
+      "exceptionPaymentTypes": {
+        "missingInvalidAccount": false,
+        "outOfBalanceMultiple": false,
+        "outOfBalanceCheckLists": false,
+        "partialPayment": false,
+        "other": false,
+        "otherDescription": ""
+      },
+      "exceptionAvailabilityDuration": null,
+      "emailNotifications": null,
+      "notificationEmail": ""
+    },
+    "remittanceCoupon": {
+      "multipleRemittanceDocuments": null,
+      "ocrDocumentCount": "",
+      "scanlineFormatConsistent": null,
+      "scanlineFontType": null,
+      "alphaCharactersInScanline": null,
+      "alphaReplacementScheme": "",
+      "accountNumberInOCR": null,
+      "scanlineDefinition": [],
+      "embeddedCheckDigit": null,
+      "embeddedCheckDigitStart": "",
+      "embeddedCheckDigitEnd": "",
+      "embeddedCheckDigitAlgorithm": "",
+      "scanlineCheckDigit": null,
+      "scanlineCheckDigitStart": "",
+      "scanlineCheckDigitEnd": "",
+      "scanlineCheckDigitAlgorithm": "",
+      "returnEnvelopes": null,
+      "envelopeReplyType": null,
+      "envelopeStyle": null,
+      "markSenseDetection": null,
+      "batchImageAllocationReport": false,
+      "specialTestingRequirements": null,
+      "specialTestingDetails": ""
+    },
+    "transmissionFiles": {
+      "technicalContact": {
+        "name": "",
+        "location": "",
+        "phone": "",
+        "email": ""
+      },
+      "requiredTransmissionTime": "",
+      "requestedFileName": "",
+      "deliveryMethod": null,
+      "sftpDirection": null,
+      "sftpIPAddress": "",
+      "sftpUserID": "",
+      "sftpPassword": "",
+      "fileFormat": null,
+      "invoiceRecordPerCheck": null,
+      "invoiceLimitPerCheck": null,
+      "maxInvoicesPerCheck": "",
+      "customBatchRange": null,
+      "batchRangeStart": "",
+      "batchRangeEnd": "",
+      "batchNumberReset": null,
+      "consolidatedFile": null,
+      "consolidatedFileLockboxes": "",
+      "inboundFiles": null,
+      "inboundFileType": null,
+      "inboundFileTypeOther": "",
+      "fileSpecifications": null,
+      "fileDeliveryFrequency": null,
+      "fileDeliveryTime": "",
+      "inboundFileName": "",
+      "inboundSFTPDirection": null,
+      "inboundIPAddress": "",
+      "inboundUserID": "",
+      "inboundPassword": ""
+    }
+  },
+  "cards": [
+    {
+      "id": "contact_bank_project",
+      "title": "Bank Project Contact (Implementation Consultant)",
+      "intro": "Please provide the Bank Project Contact details.",
+      "fields": [
+        {
+          "key": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "location",
+          "label": "Location",
+          "type": "text"
+        },
+        {
+          "key": "phone",
+          "label": "Phone",
+          "type": "phone"
+        },
+        {
+          "key": "email",
+          "label": "Email",
+          "type": "email"
+        },
+        {
+          "key": "jobTitle",
+          "label": "Job Title",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "contact_client_primary",
+      "title": "Client Primary Contact",
+      "intro": "Please provide the primary client contact for box implementation.",
+      "fields": [
+        {
+          "key": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "location",
+          "label": "Location",
+          "type": "text"
+        },
+        {
+          "key": "phone",
+          "label": "Phone",
+          "type": "phone"
+        },
+        {
+          "key": "email",
+          "label": "Email",
+          "type": "email"
+        }
+      ]
+    },
+    {
+      "id": "contact_client_secondary",
+      "title": "Client Secondary Contact",
+      "intro": "Please provide the secondary client contact for box implementation.",
+      "fields": [
+        {
+          "key": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "location",
+          "label": "Location",
+          "type": "text"
+        },
+        {
+          "key": "phone",
+          "label": "Phone",
+          "type": "phone"
+        },
+        {
+          "key": "email",
+          "label": "Email",
+          "type": "email"
+        }
+      ]
+    },
+    {
+      "id": "approval",
+      "title": "Bank Questionnaire Approval",
+      "intro": "Bank representative approving this questionnaire submission.",
+      "fields": [
+        {
+          "key": "name",
+          "label": "Name (Printed)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "title",
+          "label": "Title",
+          "type": "text"
+        },
+        {
+          "key": "signature",
+          "label": "Signature",
+          "type": "text",
+          "required": true,
+          "help": "Typed name serves as electronic signature / approval to initiate box setup."
+        }
+      ]
+    },
+    {
+      "id": "deposit_banking",
+      "title": "Deposit & Billing Banking Details",
+      "intro": "Please provide the banking details for deposit and billing.",
+      "fields": [
+        {
+          "key": "depositBank",
+          "label": "Deposit Bank",
+          "type": "text"
+        },
+        {
+          "key": "depositDDA",
+          "label": "Deposit DDA #",
+          "type": "text",
+          "validate": "dda"
+        },
+        {
+          "key": "depositRT",
+          "label": "Deposit RT #",
+          "type": "text",
+          "validate": "rt"
+        },
+        {
+          "key": "billingDDA",
+          "label": "Billing DDA #",
+          "type": "text",
+          "validate": "dda"
+        },
+        {
+          "key": "billingRT",
+          "label": "Billing RT #",
+          "type": "text",
+          "validate": "rt"
+        }
+      ]
+    },
+    {
+      "id": "exception_handling",
+      "title": "Exception Handling Rules",
+      "intro": "Select how to handle each exception type (recommended defaults shown in the form).",
+      "fields": [
+        {
+          "key": "blankPayee",
+          "label": "Blank Payee",
+          "type": "select",
+          "options": [
+            {
+              "value": "accept",
+              "label": "Accept & Deposit"
+            },
+            {
+              "value": "return",
+              "label": "Return Unprocessed"
+            }
+          ],
+          "required": true
+        },
+        {
+          "key": "blankLegalLine",
+          "label": "Blank Legal Line",
+          "type": "select",
+          "options": [
+            {
+              "value": "accept",
+              "label": "Accept & Deposit"
+            },
+            {
+              "value": "return",
+              "label": "Return Unprocessed"
+            }
+          ],
+          "required": true
+        },
+        {
+          "key": "thirdPartyChecks",
+          "label": "Third Party Checks",
+          "type": "select",
+          "options": [
+            {
+              "value": "accept",
+              "label": "Accept & Deposit"
+            },
+            {
+              "value": "return",
+              "label": "Return Unprocessed"
+            }
+          ],
+          "required": true
+        },
+        {
+          "key": "missingSignature",
+          "label": "Missing Signature",
+          "type": "select",
+          "options": [
+            {
+              "value": "accept",
+              "label": "Accept & Deposit"
+            },
+            {
+              "value": "return",
+              "label": "Return Unprocessed"
+            }
+          ],
+          "required": true
+        },
+        {
+          "key": "postDatedChecks",
+          "label": "Post Dated Checks",
+          "type": "select",
+          "options": [
+            {
+              "value": "accept",
+              "label": "Accept & Deposit"
+            },
+            {
+              "value": "return",
+              "label": "Return Unprocessed"
+            }
+          ],
+          "required": true
+        },
+        {
+          "key": "staleDatedChecks",
+          "label": "Stale Dated Checks",
+          "type": "select",
+          "options": [
+            {
+              "value": "accept",
+              "label": "Accept & Deposit"
+            },
+            {
+              "value": "return",
+              "label": "Return Unprocessed"
+            }
+          ],
+          "required": true
+        },
+        {
+          "key": "paidInFull",
+          "label": "“Paid in Full” Items (Best Effort)",
+          "type": "select",
+          "options": [
+            {
+              "value": "accept",
+              "label": "Accept & Deposit"
+            },
+            {
+              "value": "return",
+              "label": "Return Unprocessed"
+            }
+          ],
+          "required": true
+        },
+        {
+          "key": "foreignChecks",
+          "label": "Foreign Checks",
+          "type": "select",
+          "options": [
+            {
+              "value": "accept",
+              "label": "Accept & Deposit"
+            },
+            {
+              "value": "return",
+              "label": "Return Unprocessed"
+            }
+          ],
+          "required": true
+        }
+      ]
+    },
+    {
+      "id": "discrepancy",
+      "title": "Legal Line vs Courtesy Box Discrepancy",
+      "intro": "What should happen when the Legal Line (written) amount differs from the courtesy box (numeric) amount?",
+      "fields": [
+        {
+          "key": "discrepancyHandling",
+          "label": "Handling",
+          "type": "select",
+          "required": true,
+          "options": [
+            {
+              "value": "legal",
+              "label": "Use legal (written) amount"
+            },
+            {
+              "value": "return",
+              "label": "Return unprocessed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "payee_verification",
+      "title": "Payee Verification",
+      "intro": "Select how payee verification should be handled.",
+      "fields": [
+        {
+          "key": "payeeVerification",
+          "label": "Verification",
+          "type": "select",
+          "required": true,
+          "options": [
+            {
+              "value": "all",
+              "label": "Accept all payees"
+            },
+            {
+              "value": "listed",
+              "label": "Accept only payees listed"
+            }
+          ]
+        },
+        {
+          "key": "acceptedPayees",
+          "label": "Acceptable Payees",
+          "type": "group",
+          "repeat": true,
+          "showIf": {
+            "field": "payeeVerification",
+            "equals": "listed"
+          },
+          "fields": [
+            {
+              "key": "payee",
+              "label": "Payee name",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "backup_destruction",
+      "title": "Backup Destruction",
+      "intro": "How should backup materials (other than checks) be handled?",
+      "fields": [
+        {
+          "key": "backupDestruction",
+          "label": "Handling",
+          "type": "select",
+          "required": true,
+          "options": [
+            {
+              "value": "destroy",
+              "label": "Temp Hold & Destroy"
+            },
+            {
+              "value": "return",
+              "label": "Return all backup in daily package"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "mail_out_method",
+      "title": "Mail Out Method",
+      "intro": "Select the mail out method.",
+      "fields": [
+        {
+          "key": "mailOutMethod",
+          "label": "Method",
+          "type": "select",
+          "required": true,
+          "options": [
+            {
+              "value": "first_class",
+              "label": "First Class"
+            },
+            {
+              "value": "express",
+              "label": "Express Mail"
+            }
+          ]
+        },
+        {
+          "key": "expressDelivery",
+          "label": "Express delivery schedule",
+          "type": "select",
+          "showIf": {
+            "field": "mailOutMethod",
+            "equals": "express"
+          },
+          "options": [
+            {
+              "value": "overnight",
+              "label": "Overnight"
+            },
+            {
+              "value": "two_day",
+              "label": "Two Day Delivery"
+            }
+          ]
+        },
+        {
+          "key": "fedexAccount",
+          "label": "FedEx # (for Express)",
+          "type": "text",
+          "showIf": {
+            "field": "mailOutMethod",
+            "equals": "express"
+          }
+        },
+        {
+          "key": "upsAccount",
+          "label": "UPS # (for Express)",
+          "type": "text",
+          "showIf": {
+            "field": "mailOutMethod",
+            "equals": "express"
+          }
+        }
+      ]
+    },
+    {
+      "id": "mailing_address",
+      "title": "Mailing Address",
+      "intro": "Please provide the mailing address details.",
+      "fields": [
+        {
+          "key": "companyName",
+          "label": "Company Name",
+          "type": "text"
+        },
+        {
+          "key": "attentionTo",
+          "label": "Attention To",
+          "type": "text"
+        },
+        {
+          "key": "address1",
+          "label": "Address Line 1",
+          "type": "text"
+        },
+        {
+          "key": "address2",
+          "label": "Address Line 2",
+          "type": "text"
+        },
+        {
+          "key": "phone",
+          "label": "Phone Number",
+          "type": "phone"
+        }
+      ]
+    },
+    {
+      "id": "web_portal_archive",
+      "title": "Web Portal Image Archive",
+      "intro": "Select the imaging requirements for this lockbox.",
+      "fields": [
+        {
+          "key": "archiveItems",
+          "label": "Items to archive",
+          "type": "multiselect",
+          "options": [
+            {
+              "value": "checks",
+              "label": "Checks (required)"
+            },
+            {
+              "value": "documents",
+              "label": "Documents (Invoices, EOBs, etc.)"
+            },
+            {
+              "value": "correspondence",
+              "label": "Correspondence"
+            },
+            {
+              "value": "envelopes",
+              "label": "Envelopes"
+            }
+          ]
+        },
+        {
+          "key": "fullPageScanning",
+          "label": "Full page scanning for check & list payments? (Retail only)",
+          "type": "select",
+          "options": [
+            {
+              "value": "yes",
+              "label": "Yes"
+            },
+            {
+              "value": "no",
+              "label": "No"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "image_exposure",
+      "title": "Image Exposure",
+      "intro": "Select the image exposure setting for the web portal.",
+      "fields": [
+        {
+          "key": "imageExposure",
+          "label": "Image View",
+          "type": "select",
+          "required": true,
+          "options": [
+            {
+              "value": "dual",
+              "label": "Dual Sided (Default)"
+            },
+            {
+              "value": "single",
+              "label": "Single Sided"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "web_portal_admin",
+      "title": "Web Portal Administrators",
+      "intro": "Provide the web portal administrator(s).",
+      "fields": [
+        {
+          "key": "admins",
+          "label": "Administrator",
+          "type": "group",
+          "repeat": true,
+          "fields": [
+            {
+              "key": "name",
+              "label": "Name",
+              "type": "text",
+              "required": true
+            },
+            {
+              "key": "email",
+              "label": "Email Address",
+              "type": "email",
+              "required": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "emailed_reports",
+      "title": "Emailed Reports",
+      "intro": "Select which emailed reports to enable and the recipient address.",
+      "fields": [
+        {
+          "key": "emailedReports",
+          "label": "Reports",
+          "type": "multiselect",
+          "options": [
+            {
+              "value": "noActivityReport",
+              "label": "No Activity Report"
+            },
+            {
+              "value": "batchSummaryByMode",
+              "label": "Batch Summary by Batch Mode"
+            },
+            {
+              "value": "batchSummaryByNumber",
+              "label": "Batch Summary by Batch Number"
+            },
+            {
+              "value": "batchSummaryWithSortTypes",
+              "label": "Batch Summary with Sort Types"
+            }
+          ]
+        },
+        {
+          "key": "emailAddress",
+          "label": "Email Address(es)",
+          "type": "email"
+        }
+      ]
+    },
+    {
+      "id": "scheduled_reports",
+      "title": "Scheduled Reports",
+      "intro": "Select which scheduled reports to enable.",
+      "fields": [
+        {
+          "key": "scheduledReports",
+          "label": "Reports",
+          "type": "multiselect",
+          "options": [
+            {
+              "value": "batchSummaryByMode",
+              "label": "Batch Summary by Batch Mode"
+            },
+            {
+              "value": "batchSummaryByNumber",
+              "label": "Batch Summary by Batch Number"
+            },
+            {
+              "value": "batchSummaryByModeWithSortTypes",
+              "label": "Batch Summary by Batch Mode with Sort Types"
+            },
+            {
+              "value": "batchImageDetail",
+              "label": "Batch Image Detail"
+            },
+            {
+              "value": "checkImageDetail",
+              "label": "Check Image Detail"
+            },
+            {
+              "value": "depositSummaryDaily",
+              "label": "Deposit Summary (Daily)"
+            },
+            {
+              "value": "depositSummaryMonthly",
+              "label": "Deposit Summary (Monthly)"
+            },
+            {
+              "value": "depositSummaryMultiple",
+              "label": "Deposit Summary (Multiple Lockboxes)"
+            }
+          ]
+        },
+        {
+          "key": "consolidatedReportLockboxes",
+          "label": "Other lockboxes for consolidated deposit report",
+          "type": "text",
+          "help": "Only needed if Deposit Summary (Multiple Lockboxes) is selected."
+        }
+      ]
+    },
+    {
+      "id": "data_capture",
+      "title": "Data Capture Fields",
+      "intro": "Add one row per field to capture. Standard fields include: Remitter/Payer Name, Customer Number, Invoice Number, Invoice Amount, Gross Invoice Amt, Discount Amt, Net Invoice Amt. Use blank rows for custom fields.",
+      "fields": [
+        {
+          "key": "fields",
+          "label": "Field",
+          "type": "group",
+          "repeat": true,
+          "fields": [
+            {
+              "key": "fieldName",
+              "label": "Field Name",
+              "type": "text",
+              "required": true
+            },
+            {
+              "key": "length",
+              "label": "Length (digits)",
+              "type": "number"
+            },
+            {
+              "key": "fieldType",
+              "label": "Type",
+              "type": "select",
+              "options": [
+                {
+                  "value": "N",
+                  "label": "Numeric (N)"
+                },
+                {
+                  "value": "AN",
+                  "label": "Alpha-Numeric (AN)"
+                }
+              ]
+            },
+            {
+              "key": "validation",
+              "label": "Field Validation",
+              "type": "text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "scanline_definition",
+      "title": "Scanline Definition",
+      "intro": "Define each field in the scanline, including check digits and spaces.",
+      "fields": [
+        {
+          "key": "rows",
+          "label": "Scanline field",
+          "type": "group",
+          "repeat": true,
+          "fields": [
+            {
+              "key": "digitStart",
+              "label": "Digit Start",
+              "type": "number",
+              "required": true
+            },
+            {
+              "key": "digitEnd",
+              "label": "Digit End",
+              "type": "number",
+              "required": true
+            },
+            {
+              "key": "fieldLength",
+              "label": "Field Length",
+              "type": "number"
+            },
+            {
+              "key": "fieldType",
+              "label": "Field Type",
+              "type": "select",
+              "options": [
+                {
+                  "value": "numeric",
+                  "label": "Numeric"
+                },
+                {
+                  "value": "alpha-numeric",
+                  "label": "Alpha-Numeric"
+                }
+              ]
+            },
+            {
+              "key": "fieldName",
+              "label": "Field Name",
+              "type": "text",
+              "required": true
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

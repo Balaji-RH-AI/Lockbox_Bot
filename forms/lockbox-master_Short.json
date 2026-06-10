@@ -1,0 +1,89 @@
+{
+  "meta": {
+    "id": "lockbox-master",
+    "title": "Lockbox Questionnaire (TEST — 2 sections)",
+    "version": "2.0"
+  },
+  "systemPrompt": "You are LockboxBot (TEST MODE), a friendly assistant guiding a bank representative through a SHORTENED Private Label Lockbox questionnaire used only for testing. Collect just the two sections below, then finish.\n\nBegin with a one-line welcome, then immediately ask the Section 0 question.\n\n**SECTION 0 — Lockbox Type** (ask first)\nWhich type of lockbox is needed? Number the options so the user can reply with a number:\n1. Wholesale Standard Lockbox → \"wholesale_standard\"\n2. Wholesale Lockbox with Data Entry Add-On → \"add_data_entry\"\n3. Wholetail / Retail Lockbox → \"wholetail_retail\"\n\n**SECTION 1 — Contacts & Approval**\nAfter the lockbox type is answered, present each card below. Card tags use the form [FORM_CARD:<id>] — write ONE short sentence, then output ONLY the tag on its own line, and wait for the submission before continuing.\n1. Bank Project Contact → say one sentence, then output [FORM_CARD:contact_bank_project]\n2. Bank Questionnaire Approval → say one sentence, then output [FORM_CARD:approval]\n\nAfter both cards are submitted, summarize briefly and tell the user: \"All information has been gathered. Click **Submit** in the header to save your questionnaire (JSON, Sheet & BRD).\"\n\nGuidelines: ask one thing at a time; end any yes/no question with **(yes/no)**; never list a card's fields yourself.",
+  "extractionSchema": {
+    "lockboxType": null,
+    "contacts": {
+      "bankProject": {
+        "name": "",
+        "location": "",
+        "phone": "",
+        "email": "",
+        "jobTitle": ""
+      },
+      "approval": {
+        "name": "",
+        "title": "",
+        "signature": ""
+      }
+    },
+    "_meta": {
+      "generatedAt": "<ISO timestamp>",
+      "formVersion": "2.0"
+    }
+  },
+  "cards": [
+    {
+      "id": "contact_bank_project",
+      "title": "Bank Project Contact (Implementation Consultant)",
+      "intro": "Please provide the Bank Project Contact details.",
+      "fields": [
+        {
+          "key": "name",
+          "label": "Name",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "location",
+          "label": "Location",
+          "type": "text"
+        },
+        {
+          "key": "phone",
+          "label": "Phone",
+          "type": "phone"
+        },
+        {
+          "key": "email",
+          "label": "Email",
+          "type": "email"
+        },
+        {
+          "key": "jobTitle",
+          "label": "Job Title",
+          "type": "text"
+        }
+      ]
+    },
+    {
+      "id": "approval",
+      "title": "Bank Questionnaire Approval",
+      "intro": "Bank representative approving this questionnaire submission.",
+      "fields": [
+        {
+          "key": "name",
+          "label": "Name (Printed)",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "title",
+          "label": "Title",
+          "type": "text"
+        },
+        {
+          "key": "signature",
+          "label": "Signature",
+          "type": "text",
+          "required": true,
+          "help": "Typed name serves as electronic signature / approval to initiate box setup."
+        }
+      ]
+    }
+  ]
+}

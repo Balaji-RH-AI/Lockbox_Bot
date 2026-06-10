@@ -1,0 +1,41 @@
+{
+  "since": "2026-06-04T12:00:29.846Z",
+  "updatedAt": "2026-06-10T04:36:50.622Z",
+  "byCategory": {
+    "chat": {
+      "prompt": 153410,
+      "completion": 1970,
+      "total": 155380,
+      "calls": 37,
+      "cached": 110080
+    },
+    "extract": {
+      "prompt": 1020,
+      "completion": 161,
+      "total": 1181,
+      "cached": 0,
+      "calls": 1
+    },
+    "embed": {
+      "prompt": 1095,
+      "completion": 0,
+      "total": 1095,
+      "cached": 0,
+      "calls": 8
+    },
+    "help": {
+      "prompt": 8931,
+      "completion": 467,
+      "total": 9398,
+      "cached": 1152,
+      "calls": 7
+    }
+  },
+  "grandTotal": {
+    "prompt": 164456,
+    "completion": 2598,
+    "total": 167054,
+    "cached": 111232,
+    "calls": 53
+  }
+}

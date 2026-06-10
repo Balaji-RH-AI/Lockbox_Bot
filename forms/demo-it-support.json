@@ -1,0 +1,113 @@
+{
+  "meta": {
+    "title": "IT Support Request Form",
+    "version": "1.0",
+    "generatedAt": "2026-06-04T06:37:46Z",
+    "id": "demo-it-support"
+  },
+  "systemPrompt": "Welcome! Let's begin. First, please provide your full name.\nNext, what is your work email?\nNow, which department do you belong to?\nNow I'll collect your request details.\n[FORM_CARD:request_details]\nIs this blocking your work? **(yes/no)**\nWhen finished, you can click 'Export JSON' to download your answers.",
+  "extractionSchema": {
+    "requester": {
+      "fullName": null,
+      "workEmail": "",
+      "department": ""
+    },
+    "requestDetails": {
+      "requestType": "",
+      "priority": "",
+      "subject": "",
+      "detailedDescription": "",
+      "isBlockingWork": false
+    },
+    "asset": {
+      "assetTagNumber": "",
+      "deviceLocation": {
+        "building": "",
+        "floor": ""
+      }
+    },
+    "followUp": {
+      "preferredContactPhoneNumber": "",
+      "bestTimeToReachYou": ""
+    },
+    "_meta": {
+      "generatedAt": "<ISO timestamp>",
+      "formVersion": "1.0"
+    }
+  },
+  "cards": [
+    {
+      "id": "request_details",
+      "title": "Request Details",
+      "intro": "Now I'll collect your request details.",
+      "fields": [
+        {
+          "key": "requestType",
+          "label": "Request Type",
+          "type": "select",
+          "required": true,
+          "options": [
+            {
+              "value": "hardware_issue",
+              "label": "Hardware issue"
+            },
+            {
+              "value": "software_issue",
+              "label": "Software issue"
+            },
+            {
+              "value": "access_request",
+              "label": "Access request"
+            },
+            {
+              "value": "other",
+              "label": "Other"
+            }
+          ]
+        },
+        {
+          "key": "priority",
+          "label": "Priority",
+          "type": "select",
+          "required": true,
+          "options": [
+            {
+              "value": "low",
+              "label": "Low"
+            },
+            {
+              "value": "medium",
+              "label": "Medium"
+            },
+            {
+              "value": "high",
+              "label": "High"
+            },
+            {
+              "value": "urgent",
+              "label": "Urgent"
+            }
+          ]
+        },
+        {
+          "key": "subject",
+          "label": "Subject",
+          "type": "text",
+          "required": true
+        },
+        {
+          "key": "detailedDescription",
+          "label": "Detailed Description",
+          "type": "textarea",
+          "required": true
+        },
+        {
+          "key": "isBlockingWork",
+          "label": "Is this blocking your work?",
+          "type": "checkbox",
+          "required": false
+        }
+      ]
+    }
+  ]
+}

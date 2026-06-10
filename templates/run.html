@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="docTitle">Questionnaire Assistant</title>
+  <style>
+    :root { --bg:#0f172a; --panel:#1e293b; --panel2:#172033; --accent:#3b82f6; --text:#e2e8f0; --muted:#94a3b8; --ok:#22c55e; --err:#ef4444; --user:#2563eb; }
+    * { box-sizing: border-box; }
+    body { margin:0; font-family: system-ui,"Segoe UI",sans-serif; background:var(--bg); color:var(--text); height:100vh; display:flex; flex-direction:column; }
+    header { padding:14px 22px; border-bottom:1px solid #334155; display:flex; align-items:center; gap:12px; }
+    header h1 { font-size:16px; margin:0; font-weight:600; }
+    header .sub { color:var(--muted); font-size:12px; }
+    header .right { margin-left:auto; display:flex; gap:8px; }
+    button { background:var(--accent); color:#fff; border:0; border-radius:8px; padding:9px 14px; font-size:13px; font-weight:600; cursor:pointer; }
+    button.ghost { background:transparent; border:1px solid #334155; color:var(--text); }
+    button:disabled { opacity:.5; cursor:default; }
+    #chat { flex:1; overflow:auto; padding:22px; display:flex; flex-direction:column; gap:14px; }
+    .msg { max-width:760px; padding:12px 15px; border-radius:12px; white-space:pre-wrap; line-height:1.5; font-size:14px; }
+    .msg.bot { background:var(--panel); align-self:flex-start; border:1px solid #334155; }
+    .msg.user { background:var(--user); align-self:flex-end; }
+    .quick { display:flex; gap:8px; align-self:flex-start; }
+    .quick button { background:var(--panel2); border:1px solid #334155; color:var(--text); }
+    .card { background:var(--panel); border:1px solid #334155; border-radius:12px; padding:16px; align-self:flex-start; max-width:760px; width:100%; }
+    .card h3 { margin:0 0 4px; font-size:15px; }
+    .card .intro { color:var(--muted); font-size:13px; margin-bottom:12px; }
+    .fld { margin-bottom:12px; }
+    .fld > label { display:block; font-size:13px; color:var(--muted); margin-bottom:5px; }
+    .fld input[type=text], .fld input[type=number], .fld input[type=date], .fld input[type=email], .fld input[type=tel], .fld textarea, .fld select {
+      width:100%; background:var(--panel2); border:1px solid #334155; color:var(--text); border-radius:8px; padding:9px; font-size:14px; font-family:inherit; }
+    .fld textarea { min-height:70px; resize:vertical; }
+    .opt { display:flex; align-items:center; gap:8px; font-size:14px; padding:3px 0; }
+    .opt input { width:auto; }
+    .group-row { border:1px solid #243049; border-radius:8px; padding:12px; margin-bottom:10px; position:relative; }
+    .group-row .rm { position:absolute; top:8px; right:8px; background:transparent; border:0; color:var(--err); cursor:pointer; font-size:12px; }
+    .err-text { color:var(--err); font-size:12px; margin-top:4px; }
+    .card .actions { display:flex; gap:10px; margin-top:8px; }
+    .addrow { background:transparent; border:1px dashed #334155; color:var(--muted); }
+    footer { border-top:1px solid #334155; padding:14px 22px; display:flex; gap:10px; }
+    #input { flex:1; background:var(--panel2); border:1px solid #334155; color:var(--text); border-radius:10px; padding:12px; font-size:14px; resize:none; font-family:inherit; }
+    .spinner { display:inline-block; width:13px; height:13px; border:2px solid #fff5; border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; vertical-align:-2px; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .banner { background:#3b1d1d; border:1px solid var(--err); color:#fca5a5; padding:10px 14px; border-radius:8px; margin:14px 22px; font-size:13px; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="title">Questionnaire Assistant</h1>
+    <span class="sub" id="ver"></span>
+    <div class="right">
+      <a href="/generator" style="align-self:center; color:var(--accent); font-size:13px; text-decoration:none">Generator ↗</a>
+      <button id="export" class="ghost">Export JSON</button>
+      <button id="reset" class="ghost">Reset</button>
+    </div>
+  </header>
+
+  <div id="noform" class="banner" style="display:none">No active form. Create one in the <a href="/generator" style="color:#fca5a5">Generator</a>.</div>
+  <div id="chat"></div>
+
+  <footer>
+    <textarea id="input" rows="1" placeholder="Type your answer…"></textarea>
+    <button id="send">Send</button>
+  </footer>
+
+  <script>
+    const $ = (s) => document.querySelector(s);
+    const chat = $('#chat');
+    let CARDS = {};        // id -> card spec
+    let VALIDATORS = {}, TYPE_VALIDATOR = {};
+    let busy = false;
+
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+
+    // ── Load active form config ──
+    async function loadForm() {
+      try {
+        const r = await fetch('/api/form');
+        if (!r.ok) { $('#noform').style.display = 'block'; return false; }
+        const j = await r.json();
+        (j.cards || []).forEach((c) => (CARDS[c.id] = c));
+        // eval validator source into our scope
+        new Function('g', j.validatorSource + '\n g.VALIDATORS = VALIDATORS; g.TYPE_VALIDATOR = TYPE_VALIDATOR;')(window);
+        VALIDATORS = window.VALIDATORS; TYPE_VALIDATOR = window.TYPE_VALIDATOR;
+        $('#title').textContent = j.meta?.title || 'Questionnaire Assistant';
+        $('#docTitle').textContent = j.meta?.title || 'Questionnaire Assistant';
+        $('#ver').textContent = j.meta?.version ? 'v' + j.meta.version : '';
+        return true;
+      } catch { $('#noform').style.display = 'block'; return false; }
+    }
+
+    function addMsg(text, who) {
+      const d = document.createElement('div');
+      d.className = 'msg ' + who;
+      d.textContent = text;
+      chat.appendChild(d);
+      chat.scrollTop = chat.scrollHeight;
+      return d;
+    }
+
+    // ── Streaming chat ──
+    // hidden=true sends the message to the model but does NOT show a user bubble
+    // (used for the silent kickoff that asks the assistant to greet first).
+    async function send(message, hidden) {
+      if (busy || !message.trim()) return;
+      busy = true; $('#send').disabled = true;
+      if (!hidden) addMsg(message, 'user');
+      $('#input').value = '';
+      const botDiv = addMsg('', 'bot');
+      let full = '';
+      try {
+        const resp = await fetch('/chat', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ message, formId: 'active' }),
+        });
+        const reader = resp.body.getReader();
+        const dec = new TextDecoder();
+        let buf = '';
+        while (true) {
+          const { value, done } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const parts = buf.split('\n\n'); buf = parts.pop();
+          for (const p of parts) {
+            const line = p.replace(/^data: /, '').trim();
+            if (!line) continue;
+            let ev; try { ev = JSON.parse(line); } catch { continue; }
+            if (ev.text) { full += ev.text; botDiv.textContent = full; chat.scrollTop = chat.scrollHeight; }
+            if (ev.error) { botDiv.textContent = '⚠️ ' + ev.error; }
+          }
+        }
+      } catch (e) {
+        botDiv.textContent = '⚠️ ' + e.message;
+      } finally {
+        busy = false; $('#send').disabled = false;
+        afterBotMessage(full, botDiv);
+      }
+    }
+
+    // ── Post-message: render cards / quick yes-no buttons ──
+    function afterBotMessage(text, botDiv) {
+      // FORM_CARD tags
+      const cardTags = [...text.matchAll(/\[FORM_CARD:([a-z0-9_]+)\]/gi)].map((m) => m[1]);
+      // legacy date picker
+      const dateTags = [...text.matchAll(/\[DATE_PICKER:([a-z0-9_]+)\]/gi)].map((m) => m[1]);
+      if (cardTags.length || dateTags.length) {
+        // strip the tag from the visible message
+        botDiv.textContent = text.replace(/\[(FORM_CARD|DATE_PICKER):[a-z0-9_]+\]/gi, '').trim();
+        cardTags.forEach((id) => CARDS[id] ? renderCard(CARDS[id]) : addMsg('(missing card spec: ' + id + ')', 'bot'));
+        dateTags.forEach((key) => renderCard({ id: key, title: 'Select a date', fields: [{ key, label: 'Date', type: 'date', required: true }] }));
+        return;
+      }
+      // yes/no quick buttons
+      if (/\(yes\s*\/\s*no\)/i.test(text)) {
+        const q = document.createElement('div'); q.className = 'quick';
+        ['Yes', 'No'].forEach((v) => {
+          const b = document.createElement('button'); b.textContent = v;
+          b.onclick = () => { q.remove(); send(v.toLowerCase()); };
+          q.appendChild(b);
+        });
+        chat.appendChild(q); chat.scrollTop = chat.scrollHeight;
+      }
+    }
+
+    // ── Generic card renderer ──
+    function renderCard(card) {
+      const wrap = document.createElement('div'); wrap.className = 'card';
+      wrap.innerHTML = '<h3>' + esc(card.title || card.id) + '</h3>' +
+        (card.intro ? '<div class="intro">' + esc(card.intro) + '</div>' : '');
+      const body = document.createElement('div'); wrap.appendChild(body);
+      const fields = card.fields || [];
+      fields.forEach((f) => body.appendChild(renderField(f, wrap)));
+
+      // conditional visibility wiring
+      const applyConds = () => {
+        fields.forEach((f) => {
+          if (!f.showIf) return;
+          const host = wrap.querySelector('[data-fieldkey="' + f.key + '"]');
+          if (!host) return;
+          const ctrl = wrap.querySelector('[name="' + f.showIf.field + '"]');
+          let val = ctrl ? getControlValue(wrap, f.showIf.field) : null;
+          host.style.display = String(val) === String(f.showIf.equals) ? '' : 'none';
+        });
+      };
+      wrap.addEventListener('change', applyConds);
+      wrap.addEventListener('input', applyConds);
+
+      const actions = document.createElement('div'); actions.className = 'actions';
+      const submit = document.createElement('button'); submit.textContent = 'Submit';
+      submit.onclick = () => {
+        const { ok, summary, firstErr } = collectCard(card, wrap);
+        if (!ok) { return; }
+        wrap.querySelectorAll('input,select,textarea,button').forEach((el) => (el.disabled = true));
+        send(summary);
+      };
+      actions.appendChild(submit);
+      wrap.appendChild(actions);
+      chat.appendChild(wrap);
+      applyConds();
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function renderField(f, scope) {
+      const host = document.createElement('div'); host.className = 'fld'; host.dataset.fieldkey = f.key;
+      const lbl = document.createElement('label'); lbl.textContent = (f.label || f.key) + (f.required ? ' *' : '');
+      host.appendChild(lbl);
+      if (f.help) { const h = document.createElement('div'); h.className = 'intro'; h.textContent = f.help; host.appendChild(h); }
+
+      if (f.type === 'group') {
+        const rows = document.createElement('div');
+        const makeRow = () => {
+          const row = document.createElement('div'); row.className = 'group-row';
+          (f.fields || []).forEach((sf) => row.appendChild(renderField(sf, scope)));
+          if (f.repeat) {
+            const rm = document.createElement('button'); rm.className = 'rm'; rm.textContent = '✕ remove';
+            rm.onclick = () => row.remove(); row.appendChild(rm);
+          }
+          return row;
+        };
+        rows.appendChild(makeRow());
+        host.appendChild(rows);
+        if (f.repeat) {
+          const add = document.createElement('button'); add.className = 'addrow'; add.textContent = '+ add another';
+          add.type = 'button'; add.onclick = () => rows.appendChild(makeRow());
+          host.appendChild(add);
+        }
+        return host;
+      }
+
+      let ctrl;
+      if (f.type === 'select') {
+        ctrl = document.createElement('div');
+        normOptions(f.options).forEach((o) => {
+          const id = f.key + '_' + o.value;
+          const w = document.createElement('label'); w.className = 'opt';
+          w.innerHTML = '<input type="radio" name="' + f.key + '" value="' + esc(o.value) + '" id="' + id + '"> ' + esc(o.label);
+          ctrl.appendChild(w);
+        });
+      } else if (f.type === 'multiselect') {
+        ctrl = document.createElement('div');
+        normOptions(f.options).forEach((o) => {
+          const w = document.createElement('label'); w.className = 'opt';
+          w.innerHTML = '<input type="checkbox" name="' + f.key + '" value="' + esc(o.value) + '"> ' + esc(o.label);
+          ctrl.appendChild(w);
+        });
+      } else if (f.type === 'checkbox') {
+        ctrl = document.createElement('label'); ctrl.className = 'opt';
+        ctrl.innerHTML = '<input type="checkbox" name="' + f.key + '"> ' + esc(f.label || f.key);
+        lbl.style.display = 'none';
+      } else if (f.type === 'textarea') {
+        ctrl = document.createElement('textarea'); ctrl.name = f.key; if (f.placeholder) ctrl.placeholder = f.placeholder;
+      } else {
+        ctrl = document.createElement('input'); ctrl.name = f.key;
+        ctrl.type = { number: 'number', date: 'date', email: 'email', phone: 'tel' }[f.type] || 'text';
+        if (f.placeholder) ctrl.placeholder = f.placeholder;
+      }
+      host.appendChild(ctrl);
+      const eb = document.createElement('div'); eb.className = 'err-text'; eb.style.display = 'none'; host.appendChild(eb);
+      return host;
+    }
+
+    function normOptions(opts) {
+      return (opts || []).map((o) => (typeof o === 'string' ? { value: o, label: o } : o));
+    }
+
+    function getControlValue(scope, key) {
+      const radios = scope.querySelectorAll('input[type=radio][name="' + key + '"]');
+      if (radios.length) { const c = [...radios].find((r) => r.checked); return c ? c.value : ''; }
+      const checks = scope.querySelectorAll('input[type=checkbox][name="' + key + '"]');
+      if (checks.length === 1 && !checks[0].value) return checks[0].checked;
+      if (checks.length) return [...checks].filter((c) => c.checked).map((c) => c.value);
+      const el = scope.querySelector('[name="' + key + '"]');
+      return el ? el.value.trim() : '';
+    }
+
+    function resolveValidator(f) { return f.validate || TYPE_VALIDATOR[f.type] || null; }
+
+    // Walk a card (handling repeating groups), validate, build NL summary.
+    function collectCard(card, scope) {
+      let ok = true, firstErr = null;
+      const lines = [];
+      const visit = (field, fieldScope, labelPrefix) => {
+        const host = fieldScope.querySelector('[data-fieldkey="' + field.key + '"]');
+        if (host && host.style.display === 'none') return; // hidden by showIf
+        if (field.type === 'group') {
+          const rows = host.querySelectorAll('.group-row');
+          rows.forEach((row, i) => {
+            const items = [];
+            (field.fields || []).forEach((sf) => {
+              const v = getControlValue(row, sf.key);
+              const er = validate(sf, v, row);
+              if (er) { ok = false; firstErr = firstErr || er; }
+              if (v !== '' && v !== false && !(Array.isArray(v) && !v.length)) items.push(sf.label + ': ' + fmt(v));
+            });
+            if (items.length) lines.push((field.label || field.key) + (rows.length > 1 ? ' #' + (i + 1) : '') + ' — ' + items.join(', '));
+          });
+          return;
+        }
+        const v = getControlValue(fieldScope, field.key);
+        const er = validate(field, v, fieldScope);
+        if (er) { ok = false; firstErr = firstErr || er; }
+        if (v !== '' && v !== false && !(Array.isArray(v) && !v.length)) lines.push((field.label || field.key) + ': ' + fmt(v));
+      };
+      (card.fields || []).forEach((f) => visit(f, scope, ''));
+      const summary = 'Here are my answers for "' + (card.title || card.id) + '":\n' + lines.join('\n');
+      return { ok, summary, firstErr };
+    }
+
+    function fmt(v) { return Array.isArray(v) ? v.join(', ') : (v === true ? 'yes' : v); }
+
+    function validate(field, value, scope) {
+      const host = scope.querySelector('[data-fieldkey="' + field.key + '"]');
+      const eb = host ? host.querySelector('.err-text') : null;
+      const clear = () => { if (eb) { eb.style.display = 'none'; eb.textContent = ''; } };
+      const fail = (m) => { if (eb) { eb.style.display = 'block'; eb.textContent = m; } return m; };
+      clear();
+      const empty = value === '' || value === null || value === undefined || (Array.isArray(value) && !value.length) || value === false;
+      if (empty) return field.required ? fail((field.label || field.key) + ' is required.') : null;
+      const vName = resolveValidator(field);
+      if (vName && VALIDATORS[vName] && !VALIDATORS[vName].test(value)) return fail(VALIDATORS[vName].message);
+      return null;
+    }
+
+    // ── Controls ──
+    $('#send').onclick = () => send($('#input').value);
+    $('#input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send($('#input').value); }
+    });
+    $('#reset').onclick = async () => {
+      await fetch('/reset', { method: 'POST' });
+      chat.innerHTML = ''; kickoff();
+    };
+    $('#export').onclick = async () => {
+      const r = await fetch('/export', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ formId: 'active' }),
+      });
+      if (!r.ok) { const j = await r.json().catch(() => ({})); addMsg('⚠️ ' + (j.error || 'Export failed'), 'bot'); return; }
+      const blob = await r.blob();
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'questionnaire.json'; a.click();
+    };
+
+    // ── Start ──
+    // Silent kickoff: an explicit instruction the model can't misread as data,
+    // and it isn't shown as a user message.
+    async function kickoff() {
+      await send("I'm ready to start. Please greet me and ask the first question of the questionnaire.", true);
+    }
+    (async () => {
+      const ok = await loadForm();
+      if (ok) kickoff();
+    })();
+  </script>
+</body>
+</html>
